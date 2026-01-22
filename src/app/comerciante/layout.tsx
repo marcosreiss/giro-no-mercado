@@ -34,7 +34,7 @@ export default function ComercianteLayout({ children }: { children: ReactNode })
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 relative">
-                                <Image src="/LOGO-GIRO-NO-MERCADO.png" alt="Logo" fill className="object-contain" />
+                                <Image src="/LOGO-GIRO-NO-MERCADO.png" alt="Logo" fill sizes="40px" className="object-contain" />
                             </div>
                             <div>
                                 <h1 className="font-bold text-lg leading-tight">Giro no Mercado</h1>

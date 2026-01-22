@@ -3,16 +3,29 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Wallet, Star } from 'lucide-react'
+import { Package, Wallet, Star, Clock, MapPin } from 'lucide-react'
 import { supabase } from '@/src/lib/supabase'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
+import { formatarMoeda, tempoRelativo } from '@/src/lib/utils'
+
+interface Pedido {
+    id: string
+    entrada_retirada: string
+    valor_total: number
+    criado_em: string
+    usuarios: {
+        nome_completo: string
+    }
+}
 
 export default function EntregadorPage() {
     const router = useRouter()
     const { user } = useAuth()
     const { success, error } = useNotification()
     const [disponivel, setDisponivel] = useState(true)
+    const [pedidosDisponiveis, setPedidosDisponiveis] = useState<Pedido[]>([])
+    const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({
         entregasHoje: 0,
         ganhosHoje: 0,
@@ -37,15 +50,58 @@ export default function EntregadorPage() {
 
             if (entregador) {
                 setDisponivel(entregador.disponivel)
+                
+                // Buscar pedidos disponíveis (aprovados, pagos, sem entregador)
+                const { data: pedidosData } = await supabase
+                    .from('pedidos')
+                    .select('*')
+                    .eq('status', 'aprovado')
+                    .is('entregador_id', null)
+                    .not('pago_em', 'is', null)
+                    .order('criado_em', { ascending: false })
+
+                // Buscar nomes dos clientes
+                const pedidosComClientes = await Promise.all(
+                    (pedidosData || []).map(async (pedido) => {
+                        const { data: cliente } = await supabase
+                            .from('usuarios')
+                            .select('nome_completo')
+                            .eq('id', pedido.cliente_id)
+                            .single()
+
+                        return {
+                            ...pedido,
+                            usuarios: cliente || { nome_completo: 'Cliente' }
+                        }
+                    })
+                )
+
+                setPedidosDisponiveis(pedidosComClientes)
+
+                // Calcular estatísticas de hoje
+                const hoje = new Date()
+                hoje.setHours(0, 0, 0, 0)
+                
+                const { data: entregasHoje } = await supabase
+                    .from('pedidos')
+                    .select('taxa_entrega')
+                    .eq('entregador_id', user?.id)
+                    .eq('status', 'entregue')
+                    .gte('criado_em', hoje.toISOString())
+
+                const ganhosHoje = entregasHoje?.reduce((sum, p) => sum + (p.taxa_entrega || 0), 0) || 0
+
                 setStats({
-                    entregasHoje: 0, // TODO: calcular entregas de hoje
-                    ganhosHoje: 0, // TODO: calcular ganhos de hoje
+                    entregasHoje: entregasHoje?.length || 0,
+                    ganhosHoje,
                     avaliacaoMedia: entregador.avaliacoes_media || 5.0,
                     saldoCarteira: entregador.saldo_carteira || 0
                 })
             }
         } catch (err) {
             console.error('Erro ao carregar dados:', err)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -120,11 +176,35 @@ export default function EntregadorPage() {
 
             {/* Entregas disponíveis */}
             <section>
-                <h2 className="text-xl font-bold text-neutral-900 mb-4">
-                    {disponivel ? 'Entregas Disponíveis' : 'Você está em pausa'}
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-neutral-900">
+                        {disponivel ? 'Entregas Disponíveis' : 'Você está em pausa'}
+                    </h2>
+                    {pedidosDisponiveis.length > 0 && disponivel && (
+                        <button
+                            onClick={() => router.push('/entregador/entregas')}
+                            className="text-giro-azul-medio font-semibold text-sm active:opacity-70"
+                        >
+                            Ver todas →
+                        </button>
+                    )}
+                </div>
 
-                {disponivel ? (
+                {!disponivel ? (
+                    <div className="bg-neutral-100 rounded-2xl p-8 text-center border-2 border-neutral-200">
+                        <div className="text-6xl mb-3">😴</div>
+                        <p className="text-neutral-600 text-lg font-semibold">
+                            Você está em pausa
+                        </p>
+                        <p className="text-neutral-500 text-sm mt-2">
+                            Ative seu status para receber entregas
+                        </p>
+                    </div>
+                ) : loading ? (
+                    <div className="bg-neutral-0 rounded-2xl p-8 text-center border-2 border-neutral-200">
+                        <p className="text-neutral-600">Carregando...</p>
+                    </div>
+                ) : pedidosDisponiveis.length === 0 ? (
                     <div className="bg-neutral-0 rounded-2xl p-8 text-center border-2 border-neutral-200">
                         <div className="text-6xl mb-3">📍</div>
                         <p className="text-neutral-600 text-lg font-semibold">
@@ -135,14 +215,41 @@ export default function EntregadorPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-neutral-100 rounded-2xl p-8 text-center border-2 border-neutral-200">
-                        <div className="text-6xl mb-3">😴</div>
-                        <p className="text-neutral-600 text-lg font-semibold">
-                            Você está em pausa
-                        </p>
-                        <p className="text-neutral-500 text-sm mt-2">
-                            Ative seu status para receber entregas
-                        </p>
+                    <div className="space-y-3">
+                        {pedidosDisponiveis.slice(0, 3).map((pedido) => (
+                            <button
+                                key={pedido.id}
+                                onClick={() => router.push('/entregador/entregas')}
+                                className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-giro-azul-medio/30 active:bg-neutral-50 transition-all btn-touch"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <p className="font-bold text-neutral-900 mb-1">
+                                            {pedido.usuarios.nome_completo}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
+                                            <MapPin size={14} />
+                                            <span>{pedido.entrada_retirada}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                            <Clock size={12} />
+                                            <span>{tempoRelativo(pedido.criado_em)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-neutral-500">Ganho</p>
+                                        <p className="text-lg font-bold text-success">
+                                            R$ 5,00
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
+                        {pedidosDisponiveis.length > 3 && (
+                            <p className="text-center text-sm text-neutral-500">
+                                + {pedidosDisponiveis.length - 3} entregas disponíveis
+                            </p>
+                        )}
                     </div>
                 )}
             </section>

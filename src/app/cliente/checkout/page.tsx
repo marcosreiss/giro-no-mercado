@@ -107,19 +107,26 @@ export default function CheckoutPage() {
             console.log('Pedido criado com sucesso:', pedido)
 
             // Criar itens do pedido
-            const itensPedido = itens.map(item => ({
-                pedido_id: pedido.id,
-                produto_id: item.produto_id,
-                comerciante_id: item.comerciante_id,
-                produto_nome: item.nome,
-                quantidade: item.quantidade,
-                unidade: item.unidade,
-                preco_unitario: item.preco,
-                preco_total: item.preco * item.quantidade,
-                status: 'pendente'
-            }))
+            const itensPedido = itens.map(item => {
+                console.log('🛒 Item do carrinho:', {
+                    nome: item.nome,
+                    comerciante_id: item.comerciante_id,
+                    tem_comerciante: !!item.comerciante_id
+                })
+                return {
+                    pedido_id: pedido.id,
+                    produto_id: item.produto_id,
+                    comerciante_id: item.comerciante_id,
+                    produto_nome: item.nome,
+                    quantidade: item.quantidade,
+                    unidade: item.unidade,
+                    preco_unitario: item.preco,
+                    preco_total: item.preco * item.quantidade,
+                    status: 'pendente'
+                }
+            })
 
-            console.log('Criando itens do pedido:', itensPedido)
+            console.log('📦 Criando itens do pedido:', itensPedido)
 
             const { error: erroItens } = await supabase
                 .from('itens_pedido')

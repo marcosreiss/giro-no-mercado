@@ -66,6 +66,8 @@ export default function ComerciantePedidosPage() {
 
     const carregarPedidos = async () => {
         try {
+            console.log('🔍 Carregando pedidos para comerciante:', comercianteId)
+            
             // Buscar itens do pedido que pertencem a este comerciante
             const { data: itens, error: erroItens } = await supabase
                 .from('itens_pedido')
@@ -87,16 +89,36 @@ export default function ComerciantePedidosPage() {
                 .eq('status', 'pendente')
                 .order('criado_em', { ascending: false })
 
-            if (erroItens) throw erroItens
+            console.log('📦 Itens de pedido encontrados:', itens?.length || 0)
+            if (erroItens) {
+                console.error('❌ Erro ao buscar itens:', erroItens)
+                throw erroItens
+            }
 
             // Agrupar itens por pedido
             const pedidosMap = new Map<string, Pedido>()
             
             itens?.forEach((item: any) => {
                 const pedidoData = item.pedidos
-                if (!pedidoData || pedidoData.status !== 'aguardando_aprovacao' || !pedidoData.pago_em) return
+                console.log('🔍 Item do pedido:', {
+                    item_id: item.id,
+                    pedido_id: pedidoData?.id,
+                    pedido_status: pedidoData?.status,
+                    pago_em: pedidoData?.pago_em,
+                    produto: item.produto_nome
+                })
+                
+                if (!pedidoData || pedidoData.status !== 'aguardando_aprovacao' || !pedidoData.pago_em) {
+                    console.log('⚠️ Pedido filtrado:', {
+                        motivo: !pedidoData ? 'sem dados' : 
+                                pedidoData.status !== 'aguardando_aprovacao' ? 'status diferente' : 
+                                'não pago'
+                    })
+                    return
+                }
 
                 if (!pedidosMap.has(pedidoData.id)) {
+                    console.log('✅ Novo pedido adicionado:', pedidoData.id)
                     pedidosMap.set(pedidoData.id, {
                         ...pedidoData,
                         itens_pedido: []
@@ -124,6 +146,24 @@ export default function ComerciantePedidosPage() {
 
     const aceitarPedido = async (pedidoId: string, itensIds: string[]) => {
         try {
+            console.log('✅ Aceitando pedido:', pedidoId)
+            
+            // Verificar se o pedido foi pago
+            const { data: pedidoData, error: erroPedidoCheck } = await supabase
+                .from('pedidos')
+                .select('pago_em, status')
+                .eq('id', pedidoId)
+                .single()
+
+            if (erroPedidoCheck) throw erroPedidoCheck
+
+            if (!pedidoData?.pago_em) {
+                showError('Este pedido ainda não foi pago pelo cliente')
+                return
+            }
+
+            console.log('💰 Pedido pago em:', pedidoData.pago_em)
+
             // Atualizar status dos itens
             const { error: erroItens } = await supabase
                 .from('itens_pedido')
@@ -148,6 +188,8 @@ export default function ComerciantePedidosPage() {
                     .eq('id', pedidoId)
 
                 if (erroPedido) throw erroPedido
+                
+                console.log('🎉 Pedido aprovado! Agora disponível para entregadores')
             }
 
             success('Pedido aceito com sucesso!')
