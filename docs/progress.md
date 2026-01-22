@@ -340,6 +340,106 @@ Precisa instalar: npm install js-cookie @types/js-cookie
 
 Simples assim: ninguém acessa área que não é sua, e quem não está logado vai pro login automaticamente.
 
+Upload de Imagens - Supabase Storage
+O que foi implementado
+1. Buckets Criados
+produtos - Para fotos de produtos dos comerciantes
+
+perfis - Para fotos de perfil dos usuários
+
+Ambos configurados como públicos (qualquer um pode ver as imagens)
+
+2. Políticas de Acesso (RLS)
+6 policies criadas via SQL:
+
+Leitura pública - Qualquer pessoa pode ver as imagens
+
+Upload autenticado - Só usuários logados podem enviar imagens
+
+Delete autenticado - Só usuários logados podem deletar imagens
+
+3. Utilitários de Upload (src/lib/storage.ts)
+3 funções principais:
+
+uploadImage() - Envia imagem para o Supabase
+
+deleteImage() - Remove imagem do Supabase
+
+updateImage() - Atualiza imagem (deleta antiga + upload nova)
+
+Validações automáticas:
+
+Formato: apenas JPG, PNG ou WebP
+
+Tamanho: máximo 5MB
+
+Nome único gerado automaticamente
+
+4. Componente Visual (src/components/ImageUpload.tsx)
+Componente reutilizável com:
+
+Preview da imagem em tempo real
+
+Botão para escolher arquivo
+
+Loading state durante upload
+
+Botão para remover imagem
+
+Notificações de sucesso/erro
+
+Arrastar e soltar (drag and drop)
+
+5. Como usar
+typescript
+<ImageUpload
+  bucket="produtos"
+  folder="frutas"
+  onUploadSuccess={(url, path) => {
+    // Salvar url e path no banco
+  }}
+/>
+Simples assim: escolhe imagem → faz upload → recebe URL pública → salva no banco.
+
+
+
+Layouts Base - Implementação
+O que foi feito
+Criamos 3 layouts específicos usando o padrão layout.tsx do Next.js para cada tipo de usuário.
+
+Estrutura Comum dos 3 Layouts:
+Header fixo no topo com logo, nome do usuário e botão de logout
+
+Bottom navigation fixo com 3 abas principais
+
+Conteúdo central com scroll independente
+
+Indicador visual mostrando aba ativa
+
+1. Layout Cliente (/cliente/layout.tsx)
+🟢 Cor: Verde (gradiente secundário)
+
+Menu: Início | Pedidos | Perfil
+
+Ícones: ShoppingCart, List, User
+
+2. Layout Comerciante (/comerciante/layout.tsx)
+🟡 Cor: Amarelo
+
+Menu: Início | Produtos | Carteira
+
+Ícones: ShoppingBag, Package, Wallet
+
+3. Layout Entregador (/entregador/layout.tsx)
+🔵 Cor: Azul médio
+
+Menu: Início | Entregas | Carteira
+
+Ícones: Package, List, Wallet
+
+
+
+
 ⚠️ Pendências Importantes
 
 Tela de Carrinho - /cliente/carrinho não existe
