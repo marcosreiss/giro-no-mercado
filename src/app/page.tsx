@@ -3,6 +3,7 @@
 
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { ShoppingCart, Store, Package, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
@@ -11,7 +12,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 flex flex-col items-center justify-center p-4">
       {/* Logo */}
       <div className="text-center mb-12">
-        <div className="w-48 h-48 mx-auto mb-6 relative">
+        <div className="w-80 h-32 mx-auto mb-6 relative">
           <Image
             src="/LOGO-COM-TEXTO.png"
             alt="Giro no Mercado"
@@ -34,51 +35,51 @@ export default function HomePage() {
         {/* Cliente */}
         <button
           onClick={() => router.push('/cadastro/cliente')}
-          className="w-full bg-neutral-0 border-2 border-giro-verde-claro hover:bg-giro-verde-claro hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+          className="w-full bg-neutral-0 border-2 border-giro-verde-claro active:bg-giro-verde-claro active:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg btn-touch"
         >
           <div className="flex items-center gap-4">
-            <div className="text-5xl">🛒</div>
+            <ShoppingCart size={48} className="text-giro-verde-claro" />
             <div className="text-left flex-1">
               <h3 className="text-xl font-bold">Sou Cliente</h3>
-              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+              <p className="text-sm text-neutral-600">
                 Quero comprar produtos frescos
               </p>
             </div>
-            <div className="text-2xl">→</div>
+            <ArrowRight size={24} className="text-neutral-400" />
           </div>
         </button>
 
         {/* Feirante */}
         <button
           onClick={() => router.push('/cadastro/comerciante')}
-          className="w-full bg-neutral-0 border-2 border-giro-amarelo hover:bg-giro-amarelo hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+          className="w-full bg-neutral-0 border-2 border-giro-amarelo active:bg-giro-amarelo active:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg btn-touch"
         >
           <div className="flex items-center gap-4">
-            <div className="text-5xl">🏪</div>
+            <Store size={48} className="text-giro-amarelo" />
             <div className="text-left flex-1">
               <h3 className="text-xl font-bold">Sou Feirante</h3>
-              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+              <p className="text-sm text-neutral-600">
                 Tenho uma banca no mercado
               </p>
             </div>
-            <div className="text-2xl">→</div>
+            <ArrowRight size={24} className="text-neutral-400" />
           </div>
         </button>
 
         {/* Entregador */}
         <button
           onClick={() => router.push('/cadastro/entregador')}
-          className="w-full bg-neutral-0 border-2 border-giro-azul-medio hover:bg-giro-azul-medio hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+          className="w-full bg-neutral-0 border-2 border-giro-azul-medio active:bg-giro-azul-medio active:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg btn-touch"
         >
           <div className="flex items-center gap-4">
-            <div className="text-5xl">🏍️</div>
+            <Package size={48} className="text-giro-azul-medio" />
             <div className="text-left flex-1">
               <h3 className="text-xl font-bold">Sou Entregador Parceiro</h3>
-              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+              <p className="text-sm text-neutral-600">
                 Quero fazer entregas
               </p>
             </div>
-            <div className="text-2xl">→</div>
+            <ArrowRight size={24} className="text-neutral-400" />
           </div>
         </button>
 
@@ -87,7 +88,7 @@ export default function HomePage() {
           <p className="text-neutral-600 mb-3">Já tem uma conta?</p>
           <button
             onClick={() => router.push('/login')}
-            className="text-giro-verde-escuro font-bold text-lg hover:underline"
+            className="text-giro-verde-escuro font-bold text-lg active:underline btn-touch"
           >
             Fazer Login
           </button>
