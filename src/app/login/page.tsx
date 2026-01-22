@@ -53,17 +53,8 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="w-40 h-40 mx-auto mb-6 relative">
             <Image
-              src="/LOGO-GIRO-NO-MERCADO.png"
-              alt="Giro no Mercado"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div className="relative w-64 h-20 mx-auto">
-            <Image
               src="/LOGO-COM-TEXTO.png"
-              alt="Giro no Mercado - Logo com texto"
+              alt="Giro no Mercado"
               fill
               className="object-contain"
               priority
