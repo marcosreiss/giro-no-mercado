@@ -1,4 +1,4 @@
-import { supabase } from './supabse'
+import { supabase } from './supabase'
 import bcrypt from 'bcryptjs'
 import Cookies from 'js-cookie'
 

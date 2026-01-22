@@ -1,65 +1,98 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client'
 
-export default function Home() {
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+
+export default function HomePage() {
+  const router = useRouter()
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 flex flex-col items-center justify-center p-4">
+      {/* Logo */}
+      <div className="text-center mb-12">
+        <div className="w-48 h-48 mx-auto mb-6 relative">
+          <Image
+            src="/LOGO-COM-TEXTO.png"
+            alt="Giro no Mercado"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <p className="text-neutral-600 text-lg">
+          Conectando você ao Mercado Central
+        </p>
+      </div>
+
+      {/* Seleção de perfil */}
+      <div className="w-full max-w-md space-y-4">
+        <h2 className="text-2xl font-bold text-center text-neutral-900 mb-6">
+          Como você quer entrar?
+        </h2>
+
+        {/* Cliente */}
+        <button
+          onClick={() => router.push('/cadastro/cliente')}
+          className="w-full bg-neutral-0 border-2 border-giro-verde-claro hover:bg-giro-verde-claro hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-5xl">🛒</div>
+            <div className="text-left flex-1">
+              <h3 className="text-xl font-bold">Sou Cliente</h3>
+              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+                Quero comprar produtos frescos
+              </p>
+            </div>
+            <div className="text-2xl">→</div>
+          </div>
+        </button>
+
+        {/* Feirante */}
+        <button
+          onClick={() => router.push('/cadastro/comerciante')}
+          className="w-full bg-neutral-0 border-2 border-giro-amarelo hover:bg-giro-amarelo hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-5xl">🏪</div>
+            <div className="text-left flex-1">
+              <h3 className="text-xl font-bold">Sou Feirante</h3>
+              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+                Tenho uma banca no mercado
+              </p>
+            </div>
+            <div className="text-2xl">→</div>
+          </div>
+        </button>
+
+        {/* Entregador */}
+        <button
+          onClick={() => router.push('/cadastro/entregador')}
+          className="w-full bg-neutral-0 border-2 border-giro-azul-medio hover:bg-giro-azul-medio hover:text-neutral-0 text-neutral-900 rounded-2xl p-6 transition-all shadow-lg group btn-touch"
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-5xl">🏍️</div>
+            <div className="text-left flex-1">
+              <h3 className="text-xl font-bold">Sou Entregador Parceiro</h3>
+              <p className="text-sm text-neutral-600 group-hover:text-neutral-100">
+                Quero fazer entregas
+              </p>
+            </div>
+            <div className="text-2xl">→</div>
+          </div>
+        </button>
+
+        {/* Link para login */}
+        <div className="text-center mt-8 pt-6 border-t border-neutral-200">
+          <p className="text-neutral-600 mb-3">Já tem uma conta?</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="text-giro-verde-escuro font-bold text-lg hover:underline"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Fazer Login
+          </button>
         </div>
-      </main>
+      </div>
     </div>
-  );
+  )
 }

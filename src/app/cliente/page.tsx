@@ -5,7 +5,7 @@ import { useAuth } from '@/src/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { supabase } from '@/src/lib/supabse'
+import { supabase } from '@/lib/supabase'
 
 interface Produto {
     id: string
