@@ -54,22 +54,35 @@ export default function ClientePage() {
     }
 
     const adicionarAoCarrinho = (produtoId: string) => {
-        setCarrinho(prev => ({
-            ...prev,
-            [produtoId]: (prev[produtoId] || 0) + 1
-        }))
+        const novosItens = { ...carrinho, [produtoId]: (carrinho[produtoId] || 0) + 1 }
+        setCarrinho(novosItens)
+        salvarCarrinhoCompleto(novosItens)
     }
 
     const removerDoCarrinho = (produtoId: string) => {
-        setCarrinho(prev => {
-            const novo = { ...prev }
-            if (novo[produtoId] > 1) {
-                novo[produtoId]--
-            } else {
-                delete novo[produtoId]
-            }
-            return novo
-        })
+        const novo = { ...carrinho }
+        if (novo[produtoId] > 1) {
+            novo[produtoId]--
+        } else {
+            delete novo[produtoId]
+        }
+        setCarrinho(novo)
+        salvarCarrinhoCompleto(novo)
+    }
+
+    const salvarCarrinhoCompleto = (carrinhoAtual: Record<string, number>) => {
+        const itensCompletos = produtos
+            .filter(p => carrinhoAtual[p.id])
+            .map(p => ({
+                produto_id: p.id,
+                nome: p.nome,
+                preco: p.preco,
+                quantidade: carrinhoAtual[p.id],
+                unidade: p.unidade,
+                comerciante_id: p.comerciante_id,
+                banca_nome: p.comerciantes?.banca_nome || 'Banca'
+            }))
+        localStorage.setItem('carrinho', JSON.stringify(itensCompletos))
     }
 
     const calcularTotal = () => {

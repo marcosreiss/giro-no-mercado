@@ -4,7 +4,7 @@
 import { ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Package, List, Wallet, LogOut } from 'lucide-react'
+import { Package, List, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
 
@@ -23,7 +23,7 @@ export default function EntregadorLayout({ children }: { children: ReactNode }) 
     const navItems = [
         { id: 'home', label: 'Início', icon: Package, path: '/entregador' },
         { id: 'entregas', label: 'Entregas', icon: List, path: '/entregador/entregas' },
-        { id: 'carteira', label: 'Carteira', icon: Wallet, path: '/entregador/carteira' }
+        { id: 'perfil', label: 'Perfil', icon: User, path: '/entregador/perfil' }
     ]
 
     return (

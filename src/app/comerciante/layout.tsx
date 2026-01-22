@@ -4,7 +4,7 @@
 import { ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Package, ShoppingBag, Wallet, LogOut } from 'lucide-react'
+import { Package, ShoppingBag, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
 
@@ -23,7 +23,7 @@ export default function ComercianteLayout({ children }: { children: ReactNode })
     const navItems = [
         { id: 'home', label: 'Início', icon: ShoppingBag, path: '/comerciante' },
         { id: 'produtos', label: 'Produtos', icon: Package, path: '/comerciante/produtos' },
-        { id: 'carteira', label: 'Carteira', icon: Wallet, path: '/comerciante/carteira' }
+        { id: 'perfil', label: 'Perfil', icon: User, path: '/comerciante/perfil' }
     ]
 
     return (
