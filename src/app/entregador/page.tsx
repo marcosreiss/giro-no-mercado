@@ -49,17 +49,15 @@ export default function EntregadorPage() {
                 .from('entregadores')
                 .select('*')
                 .eq('usuario_id', user?.id)
-                .single()
+                .maybeSingle()
 
             if (entregadorError) {
-                console.error('❌ [ENTREGADOR DASHBOARD] Erro ao buscar entregador:', {
-                    message: entregadorError?.message,
-                    details: entregadorError?.details,
-                    hint: entregadorError?.hint,
-                    code: entregadorError?.code,
-                    error: entregadorError
+                console.error('❌ [ENTREGADOR DASHBOARD] Erro ao buscar entregador:', entregadorError.message || 'Erro desconhecido', {
+                    code: entregadorError.code,
+                    details: entregadorError.details,
+                    hint: entregadorError.hint
                 })
-                throw entregadorError
+                throw new Error(entregadorError.message || 'Erro ao buscar dados do entregador')
             }
 
             if (!entregador) {

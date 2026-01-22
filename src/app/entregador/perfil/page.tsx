@@ -44,17 +44,15 @@ export default function EntregadorPerfilPage() {
                 .from('entregadores')
                 .select('*')
                 .eq('usuario_id', user?.id)
-                .single()
+                .maybeSingle()
 
             if (erroEntregador) {
-                console.error('❌ [ENTREGADOR PERFIL] Erro ao buscar entregador:', {
-                    message: erroEntregador?.message,
-                    details: erroEntregador?.details,
-                    hint: erroEntregador?.hint,
-                    code: erroEntregador?.code,
-                    error: erroEntregador
+                console.error('❌ [ENTREGADOR PERFIL] Erro ao buscar entregador:', erroEntregador.message || 'Erro desconhecido', {
+                    code: erroEntregador.code,
+                    details: erroEntregador.details,
+                    hint: erroEntregador.hint
                 })
-                throw erroEntregador
+                throw new Error(erroEntregador.message || 'Erro ao buscar dados do entregador')
             }
             
             if (!entregadorData) {
@@ -71,9 +69,9 @@ export default function EntregadorPerfilPage() {
             const hoje = new Date()
             hoje.setHours(0, 0, 0, 0)
             
-            const { count: entregasHoje, error: erroEntregasHoje } = await supabase
+            const { data: entregasHojeData, error: erroEntregasHoje } = await supabase
                 .from('pedidos')
-                .select('*', { count: 'exact', head: true })
+                .select('taxa_entrega')
                 .eq('entregador_id', user?.id)
                 .eq('status', 'entregue')
                 .gte('criado_em', hoje.toISOString())
@@ -88,10 +86,11 @@ export default function EntregadorPerfilPage() {
                 })
             }
 
-            console.log('✅ [ENTREGADOR PERFIL] Entregas de hoje:', entregasHoje || 0)
+            const entregasHoje = entregasHojeData?.length || 0
+            console.log('✅ [ENTREGADOR PERFIL] Entregas de hoje:', entregasHoje)
 
-            // Ganhos de hoje (taxa de entrega * entregas de hoje)
-            const ganhosHoje = (entregasHoje || 0) * 5.00
+            // Ganhos de hoje (soma das taxas de entrega reais)
+            const ganhosHoje = entregasHojeData?.reduce((sum, p) => sum + (p.taxa_entrega || 5.00), 0) || 0
 
             // Entregas em andamento
             console.log('🔍 [ENTREGADOR PERFIL] Buscando entregas em andamento...')
@@ -114,7 +113,7 @@ export default function EntregadorPerfilPage() {
             console.log('✅ [ENTREGADOR PERFIL] Entregas em andamento:', entregasEmAndamento || 0)
 
             const estatisticasFinais = {
-                entregasHoje: entregasHoje || 0,
+                entregasHoje,
                 ganhosHoje,
                 entregasEmAndamento: entregasEmAndamento || 0
             }

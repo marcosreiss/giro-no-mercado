@@ -68,18 +68,32 @@ export default function ClientePedidosPage() {
 
     const confirmarRecebimento = async (pedidoId: string) => {
         try {
-            const { error } = await supabase
+            console.log('🔄 [CONFIRMAR RECEBIMENTO] Iniciando confirmação do pedido:', pedidoId)
+            
+            const { data, error } = await supabase
                 .from('pedidos')
-                .update({ status: 'entregue' })
+                .update({ 
+                    status: 'entregue'
+                })
                 .eq('id', pedidoId)
+                .select()
 
-            if (error) throw error
+            if (error) {
+                console.error('❌ [CONFIRMAR RECEBIMENTO] Erro Supabase:', {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                })
+                throw new Error(error.message || 'Erro ao confirmar recebimento')
+            }
 
+            console.log('✅ [CONFIRMAR RECEBIMENTO] Pedido atualizado:', data)
             success('Entrega confirmada! Obrigado!')
             carregarPedidos()
-        } catch (error) {
-            console.error('Erro ao confirmar entrega:', error)
-            showError('Erro ao confirmar entrega')
+        } catch (err: any) {
+            console.error('❌ [CONFIRMAR RECEBIMENTO] Erro:', err?.message || err)
+            showError(err?.message || 'Erro ao confirmar entrega')
         }
     }
 
