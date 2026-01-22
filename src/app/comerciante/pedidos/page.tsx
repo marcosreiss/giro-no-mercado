@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Clock, CheckCircle, XCircle } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
+import { CheckCircle, XCircle, Clock, Package } from 'lucide-react'
 import { supabase } from '@/src/lib/supabase'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
@@ -30,26 +30,15 @@ interface Pedido {
 }
 
 export default function ComerciantePedidosPage() {
-    const router = useRouter()
     const { user } = useAuth()
     const { success, error: showError } = useNotification()
     const [pedidos, setPedidos] = useState<Pedido[]>([])
     const [loading, setLoading] = useState(true)
     const [comercianteId, setComercianteId] = useState<string | null>(null)
+    const [processando, setProcessando] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (user) {
-            buscarComercianteId()
-        }
-    }, [user])
-
-    useEffect(() => {
-        if (comercianteId) {
-            carregarPedidos()
-        }
-    }, [comercianteId])
-
-    const buscarComercianteId = async () => {
+    // Função para buscar comerciante ID
+    const buscarComercianteId = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('comerciantes')
@@ -62,12 +51,15 @@ export default function ComerciantePedidosPage() {
         } catch (error) {
             console.error('Erro ao buscar comerciante:', error)
         }
-    }
+    }, [user?.id])
 
-    const carregarPedidos = async () => {
+    // Função para carregar pedidos
+    const carregarPedidos = useCallback(async () => {
+        if (!comercianteId) return
+
         try {
             console.log('🔍 Carregando pedidos para comerciante:', comercianteId)
-            
+
             // Buscar itens do pedido que pertencem a este comerciante
             const { data: itens, error: erroItens } = await supabase
                 .from('itens_pedido')
@@ -99,7 +91,7 @@ export default function ComerciantePedidosPage() {
 
             // Agrupar itens por pedido
             const pedidosMap = new Map<string, Pedido>()
-            
+
             itens?.forEach((item: any) => {
                 const pedidoData = item.pedidos
                 console.log('🔍 Item do pedido:', {
@@ -109,11 +101,11 @@ export default function ComerciantePedidosPage() {
                     pago_em: pedidoData?.pago_em,
                     produto: item.produto_nome
                 })
-                
+
                 if (!pedidoData || pedidoData.status !== 'aguardando_aprovacao' || !pedidoData.pago_em) {
                     console.log('⚠️ Pedido filtrado:', {
-                        motivo: !pedidoData ? 'sem dados' : 
-                                pedidoData.status !== 'aguardando_aprovacao' ? 'status diferente' : 
+                        motivo: !pedidoData ? 'sem dados' :
+                            pedidoData.status !== 'aguardando_aprovacao' ? 'status diferente' :
                                 'não pago'
                     })
                     return
@@ -144,12 +136,26 @@ export default function ComerciantePedidosPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [comercianteId])
+
+    // useEffect com dependências corrigidas
+    useEffect(() => {
+        if (user) {
+            buscarComercianteId()
+        }
+    }, [user, buscarComercianteId])
+
+    useEffect(() => {
+        if (comercianteId) {
+            carregarPedidos()
+        }
+    }, [comercianteId, carregarPedidos])
 
     const aceitarPedido = async (pedidoId: string, itensIds: string[]) => {
+        setProcessando(pedidoId)
         try {
             console.log('✅ Aceitando pedido:', pedidoId)
-            
+
             // Verificar se o pedido foi pago
             const { data: pedidoData, error: erroPedidoCheck } = await supabase
                 .from('pedidos')
@@ -190,7 +196,7 @@ export default function ComerciantePedidosPage() {
                     .eq('id', pedidoId)
 
                 if (erroPedido) throw erroPedido
-                
+
                 console.log('🎉 Pedido aprovado! Agora disponível para entregadores')
             }
 
@@ -199,10 +205,13 @@ export default function ComerciantePedidosPage() {
         } catch (error) {
             console.error('Erro ao aceitar pedido:', error)
             showError('Erro ao aceitar pedido')
+        } finally {
+            setProcessando(null)
         }
     }
 
     const rejeitarPedido = async (pedidoId: string, itensIds: string[]) => {
+        setProcessando(pedidoId)
         try {
             // Atualizar status dos itens
             const { error: erroItens } = await supabase
@@ -217,83 +226,96 @@ export default function ComerciantePedidosPage() {
         } catch (error) {
             console.error('Erro ao rejeitar pedido:', error)
             showError('Erro ao rejeitar pedido')
+        } finally {
+            setProcessando(null)
         }
     }
 
     if (loading) {
-        return <div className="text-center py-12">Carregando pedidos...</div>
+        return (
+            <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="w-16 h-16 border-4 border-giro-amarelo border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-xl font-bold text-neutral-700">Carregando pedidos...</p>
+            </div>
+        )
     }
 
     return (
-        <div className="space-y-6">
-            {/* Título */}
-            <div>
-                <h2 className="text-2xl font-bold text-neutral-900">
-                    Novos Pedidos
-                </h2>
-                <p className="text-neutral-600 mt-1">
+        <div className="space-y-6 pb-8">
+            {/* Título - Grande e claro */}
+            <div className="bg-giro-amarelo rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center gap-3 mb-2">
+                    <Package size={32} className="text-neutral-0" />
+                    <h2 className="text-3xl font-bold text-neutral-0">
+                        Novos Pedidos
+                    </h2>
+                </div>
+                <p className="text-neutral-0 text-xl font-semibold">
                     {pedidos.length} {pedidos.length === 1 ? 'pedido aguardando' : 'pedidos aguardando'}
                 </p>
             </div>
 
             {/* Lista de pedidos */}
             {pedidos.length === 0 ? (
-                <div className="bg-neutral-0 rounded-2xl p-8 text-center border-2 border-neutral-200">
-                    <div className="text-6xl mb-3">📦</div>
-                    <p className="text-neutral-600 text-lg font-semibold">
+                <div className="bg-neutral-0 rounded-2xl p-10 text-center border-2 border-neutral-200 shadow-md">
+                    <div className="text-7xl mb-4">📦</div>
+                    <p className="text-neutral-900 text-2xl font-bold mb-3">
                         Nenhum pedido novo
                     </p>
-                    <p className="text-neutral-500 text-sm mt-2">
+                    <p className="text-neutral-600 text-lg">
                         Você será notificado quando receber pedidos
                     </p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {pedidos.map((pedido) => {
                         const itensIds = pedido.itens_pedido.map(i => i.id)
+                        const estaProcessando = processando === pedido.id
+
                         return (
                             <div
                                 key={pedido.id}
-                                className="bg-neutral-0 rounded-2xl p-5 shadow-md border-2 border-giro-amarelo/30"
+                                className="bg-neutral-0 rounded-2xl p-6 shadow-xl border-4 border-giro-amarelo"
                             >
-                                {/* Cabeçalho */}
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Clock size={18} className="text-giro-amarelo" />
-                                            <span className="font-bold text-giro-amarelo">
-                                                Aguardando Aprovação
+                                {/* Cabeçalho com status */}
+                                <div className="flex items-start justify-between mb-5 pb-5 border-b-2 border-neutral-200">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <Clock size={28} className="text-giro-amarelo" />
+                                            <span className="font-bold text-giro-amarelo text-xl">
+                                                Aguardando sua resposta
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-semibold">
-                                                ✓ Pago
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base bg-success/20 text-success px-3 py-2 rounded-full font-bold">
+                                                ✓ Já foi pago
                                             </span>
-                                            <p className="text-xs text-neutral-500">
-                                                Pedido #{pedido.id.slice(0, 8)}
-                                            </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs text-neutral-600">Total</p>
-                                        <p className="text-xl font-bold text-neutral-900">
+                                        <p className="text-base text-neutral-600 font-semibold mb-1">Valor Total</p>
+                                        <p className="text-3xl font-bold text-neutral-900">
                                             R$ {pedido.itens_pedido.reduce((sum, item) => sum + item.preco_total, 0).toFixed(2)}
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Itens */}
-                                <div className="bg-neutral-50 rounded-xl p-4 mb-4">
-                                    <p className="text-sm font-semibold text-neutral-700 mb-3">
+                                {/* Itens do pedido - Card destacado */}
+                                <div className="bg-giro-amarelo/10 rounded-2xl p-5 mb-5 border-2 border-giro-amarelo/30">
+                                    <p className="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                                        <Package size={20} />
                                         Seus produtos neste pedido:
                                     </p>
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {pedido.itens_pedido.map((item) => (
-                                            <div key={item.id} className="flex justify-between text-sm">
-                                                <span className="text-neutral-700">
+                                            <div
+                                                key={item.id}
+                                                className="bg-neutral-0 rounded-xl p-4 flex justify-between items-center shadow-sm"
+                                            >
+                                                <span className="text-lg font-semibold text-neutral-900">
                                                     {item.quantidade} {item.unidade} de {item.produto_nome}
                                                 </span>
-                                                <span className="font-semibold text-neutral-900">
+                                                <span className="text-xl font-bold text-giro-verde-escuro">
                                                     R$ {item.preco_total.toFixed(2)}
                                                 </span>
                                             </div>
@@ -302,42 +324,52 @@ export default function ComerciantePedidosPage() {
                                 </div>
 
                                 {/* Informações de retirada */}
-                                <div className="bg-giro-amarelo/10 rounded-xl p-4 mb-4">
-                                    <p className="text-sm font-semibold text-neutral-700 mb-2">
+                                <div className="bg-neutral-100 rounded-2xl p-5 mb-6">
+                                    <p className="text-lg font-bold text-neutral-900 mb-3 flex items-center gap-2">
                                         📍 Informações de Retirada
                                     </p>
-                                    <div className="space-y-1 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-neutral-600">Entrada:</span>
-                                            <span className="font-semibold text-neutral-900">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-base text-neutral-700 font-semibold">Entrada:</span>
+                                            <span className="text-lg font-bold text-neutral-900">
                                                 {pedido.entrada_retirada}
                                             </span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-neutral-600">Horário:</span>
-                                            <span className="font-semibold text-neutral-900">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-base text-neutral-700 font-semibold">Horário:</span>
+                                            <span className="text-lg font-bold text-neutral-900">
                                                 {pedido.horario_retirada}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Ações */}
-                                <div className="grid grid-cols-2 gap-3">
+                                {/* Botões de ação - GRANDES e CLAROS */}
+                                <div className="grid grid-cols-1 gap-4">
                                     <button
                                         onClick={() => rejeitarPedido(pedido.id, itensIds)}
-                                        className="bg-neutral-200 text-neutral-900 py-3 rounded-xl font-bold flex items-center justify-center gap-2 btn-touch active:bg-neutral-300"
+                                        disabled={estaProcessando}
+                                        className="bg-neutral-200 text-neutral-900 py-6 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 btn-touch active:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg border-2 border-neutral-300"
                                     >
-                                        <XCircle size={20} />
-                                        Rejeitar
+                                        <XCircle size={28} />
+                                        {estaProcessando ? 'Aguarde...' : 'NÃO TEM - Rejeitar'}
                                     </button>
                                     <button
                                         onClick={() => aceitarPedido(pedido.id, itensIds)}
-                                        className="bg-giro-verde-escuro text-neutral-0 py-3 rounded-xl font-bold flex items-center justify-center gap-2 btn-touch active:opacity-90"
+                                        disabled={estaProcessando}
+                                        className="bg-giro-verde-escuro text-neutral-0 py-6 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 btn-touch active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl border-2 border-giro-verde-escuro"
                                     >
-                                        <CheckCircle size={20} />
-                                        Aceitar
+                                        <CheckCircle size={28} />
+                                        {estaProcessando ? 'Aceitando...' : 'TEM - Aceitar Pedido'}
                                     </button>
+                                </div>
+
+                                {/* Mensagem de ajuda */}
+                                <div className="mt-4 p-4 bg-neutral-50 rounded-xl border-2 border-neutral-200">
+                                    <p className="text-center text-base text-neutral-700 font-semibold">
+                                        💡 Clique <span className="text-giro-verde-escuro font-bold">&quot;TEM&quot;</span> se você tem o produto.
+                                        Clique <span className="font-bold">&quot;NÃO TEM&quot;</span> se acabou.
+                                    </p>
                                 </div>
                             </div>
                         )
