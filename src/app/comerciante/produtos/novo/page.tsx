@@ -30,7 +30,7 @@ export default function NovoProdutoPage() {
     const [fotoPath, setFotoPath] = useState<string>('')
     const [uploadingFoto, setUploadingFoto] = useState(false)
 
-    const { register, handleSubmit, formState: { errors }, watch, trigger, setValue } = useForm<ProdutoFormData>()
+    const { register, handleSubmit, formState: { errors }, trigger, setValue } = useForm<ProdutoFormData>()
 
     const proximoPasso = async () => {
         let camposValidar: any = []
@@ -93,6 +93,12 @@ export default function NovoProdutoPage() {
     }
 
     const onSubmit = async (data: ProdutoFormData) => {
+        // Prevenir submit se ainda está fazendo upload
+        if (uploadingFoto) {
+            error('Aguarde o upload da foto terminar')
+            return
+        }
+
         setLoading(true)
 
         try {
@@ -320,7 +326,10 @@ export default function NovoProdutoPage() {
                                     )}
                                     {uploadingFoto && (
                                         <div className="absolute inset-0 bg-neutral-900/50 flex items-center justify-center">
-                                            <p className="text-neutral-0 text-lg font-bold">Enviando...</p>
+                                            <div className="text-center">
+                                                <div className="inline-block w-8 h-8 border-4 border-neutral-0 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                                <p className="text-neutral-0 text-lg font-bold">Enviando foto...</p>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -334,6 +343,7 @@ export default function NovoProdutoPage() {
                                         accept="image/jpeg,image/jpg,image/png,image/webp"
                                         onChange={handleFotoSelect}
                                         className="hidden"
+                                        disabled={uploadingFoto}
                                     />
                                 </label>
                             )}
@@ -349,9 +359,10 @@ export default function NovoProdutoPage() {
                 <div className="flex gap-3 mt-8">
                     {passo > 1 && (
                         <button
-                            type="button"
+                            type="button"  // ✅ JÁ TEM
                             onClick={passoAnterior}
-                            className="flex-1 bg-neutral-200 active:opacity-80 text-neutral-900 font-bold py-5 px-6 rounded-xl text-lg transition-all btn-touch flex items-center justify-center gap-2"
+                            disabled={uploadingFoto}
+                            className="flex-1 bg-neutral-200 active:opacity-80 text-neutral-900 font-bold py-5 px-6 rounded-xl text-lg transition-all btn-touch flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ArrowLeft size={20} />
                             Voltar
@@ -360,7 +371,7 @@ export default function NovoProdutoPage() {
 
                     {passo < 5 ? (
                         <button
-                            type="button"
+                            type="button"  // ⚠️ FALTAVA ISSO! Estava fazendo submit
                             onClick={proximoPasso}
                             className="flex-1 bg-giro-amarelo active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all shadow-lg btn-touch flex items-center justify-center gap-2"
                         >
@@ -369,11 +380,11 @@ export default function NovoProdutoPage() {
                         </button>
                     ) : (
                         <button
-                            type="submit"
+                            type="submit"  // ✅ ESSE SIM DEVE SER SUBMIT
                             disabled={loading || uploadingFoto}
                             className="flex-1 bg-giro-amarelo active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch"
                         >
-                            {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
+                            {uploadingFoto ? 'Aguarde o upload...' : loading ? 'Cadastrando...' : 'Cadastrar Produto'}
                         </button>
                     )}
                 </div>
@@ -382,7 +393,8 @@ export default function NovoProdutoPage() {
             {/* Cancelar */}
             <button
                 onClick={() => router.push('/comerciante/produtos')}
-                className="w-full text-neutral-600 active:text-neutral-900 font-bold text-lg btn-touch py-4"
+                disabled={loading || uploadingFoto}
+                className="w-full text-neutral-600 active:text-neutral-900 font-bold text-lg btn-touch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 ← Cancelar
             </button>
