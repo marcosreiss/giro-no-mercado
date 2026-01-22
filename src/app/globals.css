@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* === Paleta oficial — Giro no Mercado === */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* === Cores principais (baseadas na paleta fornecida) === */
+  --giro-azul-escuro: #0460d9; /* Azul institucional principal */
+  --giro-azul-medio: #4f7bbf; /* Azul intermediário */
+  --giro-verde-escuro: #038c25; /* Verde principal */
+  --giro-verde-claro: #65a603; /* Verde limão vibrante */
+  --giro-amarelo: #d9a404; /* Amarelo/dourado */
+
+  /* === Neutros e estrutura === */
+  --neutral-0: #ffffff;
+  --neutral-50: #f9fafb;
+  --neutral-100: #f3f4f6;
+  --neutral-200: #e5e7eb;
+  --neutral-300: #d1d5db;
+  --neutral-400: #9ca3af;
+  --neutral-500: #6b7280;
+  --neutral-600: #4b5563;
+  --neutral-700: #374151;
+  --neutral-800: #1f2937;
+  --neutral-900: #111827;
+
+  /* === Estados e feedback === */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* === Gradientes === */
+  --gradient-principal: linear-gradient(135deg, #0460d9 0%, #4f7bbf 100%);
+  --gradient-secundario: linear-gradient(135deg, #038c25 0%, #65a603 100%);
+  --gradient-destaque: linear-gradient(90deg, #65a603 0%, #d9a404 100%);
+
+  /* === Tipografia === */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Inter", var(--font-sans);
 }
 
+/* === Mapeamento Tailwind === */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Marca */
+  --color-giro-azul-escuro: var(--giro-azul-escuro);
+  --color-giro-azul-medio: var(--giro-azul-medio);
+  --color-giro-verde-escuro: var(--giro-verde-escuro);
+  --color-giro-verde-claro: var(--giro-verde-claro);
+  --color-giro-amarelo: var(--giro-amarelo);
+
+  /* Neutros */
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+
+  /* Feedbacks */
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  /* Fontes */
+  --font-family-sans: var(--font-sans);
+  --font-family-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  outline: none;
 }
 
+/* === Defaults globais === */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--neutral-0);
+  color: var(--neutral-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* === Utilidades extras === */
+.bg-gradient-principal {
+  background: var(--gradient-principal);
+}
+
+.bg-gradient-secundario {
+  background: var(--gradient-secundario);
+}
+
+.bg-gradient-destaque {
+  background: var(--gradient-destaque);
+}
+
+/* === Acessibilidade === */
+.focus-visible {
+  @apply outline-none ring-2 ring-giro-verde-claro ring-offset-2;
+}
+
+/* === Botões com tamanho grande para mobile === */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
 }
