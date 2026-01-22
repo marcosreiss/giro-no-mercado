@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// src/app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/src/lib/auth'
 import { useAuth } from '@/src/context/AuthContext'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
@@ -12,7 +14,7 @@ export default function LoginPage() {
   const [lembrarMe, setLembrarMe] = useState(false)
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
-  
+
   const router = useRouter()
   const { setUser } = useAuth()
 
@@ -24,7 +26,7 @@ export default function LoginPage() {
     try {
       const user = await login(username, password, lembrarMe)
       setUser(user)
-      
+
       // Redirecionar baseado no tipo de usuário
       switch (user.tipo_usuario) {
         case 'cliente':
@@ -45,32 +47,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-32 h-32 mx-auto mb-4 relative">
-            {/* Substitua por sua logo */}
-            <div className="w-full h-full bg-green-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-              GnM
-            </div>
+          <div className="w-40 h-40 mx-auto mb-6 relative">
+            <Image
+              src="/LOGO-GIRO-NO-MERCADO.png"
+              alt="Giro no Mercado"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-3xl font-bold text-green-800">Giro no Mercado</h1>
-          <p className="text-gray-600 mt-2">Entre na sua conta</p>
+          <div className="relative w-64 h-20 mx-auto">
+            <Image
+              src="/LOGO-COM-TEXTO.png"
+              alt="Giro no Mercado - Logo com texto"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <p className="text-neutral-600 mt-4 text-lg">Entre na sua conta</p>
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8">
+        <form onSubmit={handleSubmit} className="bg-neutral-0 rounded-3xl shadow-xl border border-neutral-200 p-8">
           {erro && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {erro}
+            <div className="bg-error/10 border-2 border-error/30 text-error px-4 py-3 rounded-xl mb-6 font-medium">
+              ⚠️ {erro}
             </div>
           )}
 
           <div className="space-y-6">
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-base font-semibold text-neutral-700 mb-2">
                 Usuário
               </label>
               <input
@@ -79,7 +92,7 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+                className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
                 placeholder="Digite seu usuário"
                 autoComplete="username"
               />
@@ -87,7 +100,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-base font-semibold text-neutral-700 mb-2">
                 Senha
               </label>
               <input
@@ -96,7 +109,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+                className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
                 placeholder="Digite sua senha"
                 autoComplete="current-password"
               />
@@ -109,9 +122,9 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={lembrarMe}
                 onChange={(e) => setLembrarMe(e.target.checked)}
-                className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                className="w-5 h-5 text-giro-verde-escuro border-2 border-neutral-400 rounded focus:ring-giro-verde-claro focus:ring-2"
               />
-              <label htmlFor="lembrar" className="ml-3 text-gray-700">
+              <label htmlFor="lembrar" className="ml-3 text-neutral-700 font-medium">
                 Lembrar-me por 30 dias
               </label>
             </div>
@@ -120,7 +133,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-secundario hover:opacity-90 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -128,12 +141,21 @@ export default function LoginPage() {
         </form>
 
         {/* Usuários de teste */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-gray-600">
-          <p className="font-semibold mb-2">👤 Usuários de teste:</p>
-          <ul className="space-y-1">
-            <li>• <strong>cliente1</strong> / demo123</li>
-            <li>• <strong>banca1</strong> / demo123</li>
-            <li>• <strong>entregador1</strong> / demo123</li>
+        <div className="mt-6 p-5 bg-giro-azul-escuro/5 border-2 border-giro-azul-medio/20 rounded-xl text-sm text-neutral-700">
+          <p className="font-bold text-giro-azul-escuro mb-3 text-base">👤 Usuários de teste:</p>
+          <ul className="space-y-2">
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-giro-verde-claro rounded-full mr-2"></span>
+              <strong>cliente1</strong> <span className="mx-2 text-neutral-400">/</span> demo123
+            </li>
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-giro-amarelo rounded-full mr-2"></span>
+              <strong>banca1</strong> <span className="mx-2 text-neutral-400">/</span> demo123
+            </li>
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-giro-azul-medio rounded-full mr-2"></span>
+              <strong>entregador1</strong> <span className="mx-2 text-neutral-400">/</span> demo123
+            </li>
           </ul>
         </div>
       </div>
