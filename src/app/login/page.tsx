@@ -51,7 +51,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-40 h-40 mx-auto mb-6 relative">
+          <div className="w-72 h-28 mx-auto mb-4 relative">
             <Image
               src="/LOGO-COM-TEXTO.png"
               alt="Giro no Mercado"
@@ -124,12 +124,23 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-secundario hover:opacity-90 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch"
+              className="w-full bg-gradient-secundario active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </div>
         </form>
+
+        {/* Link para cadastro */}
+        <div className="text-center mt-6 pt-4 border-t border-neutral-200">
+          <p className="text-neutral-600 mb-3">Ainda não tem uma conta?</p>
+          <button
+            onClick={() => router.push('/')}
+            className="text-giro-verde-escuro font-bold text-lg active:underline btn-touch"
+          >
+            Criar Conta
+          </button>
+        </div>
 
         {/* Usuários de teste */}
         <div className="mt-6 p-5 bg-giro-azul-escuro/5 border-2 border-giro-azul-medio/20 rounded-xl text-sm text-neutral-700">
