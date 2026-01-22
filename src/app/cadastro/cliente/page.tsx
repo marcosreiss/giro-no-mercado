@@ -77,7 +77,7 @@ export default function CadastroClientePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 p-4 py-8">
+        <div className="min-h-screen bg-linear-to-b from-giro-verde-claro/10 to-neutral-0 p-4 py-8">
             <div className="max-w-md mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">

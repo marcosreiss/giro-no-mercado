@@ -17,8 +17,7 @@ export default function CadastroEntregador() {
         nome_completo: '',
         username: '',
         password: '',
-        confirmar_password: '',
-        veiculo: ''
+        confirmar_password: ''
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,13 +37,12 @@ export default function CadastroEntregador() {
         setLoading(true)
 
         try {
-            const { data: existente } = await supabase
+            const { data: existente, error: erroConsulta } = await supabase
                 .from('usuarios')
                 .select('username')
                 .eq('username', formData.username)
-                .single()
 
-            if (existente) {
+            if (!erroConsulta && existente && existente.length > 0) {
                 setErro('Este nome de usuário já está em uso')
                 setLoading(false)
                 return
@@ -68,8 +66,7 @@ export default function CadastroEntregador() {
             const { error: erroEntregador } = await supabase
                 .from('entregadores')
                 .insert({
-                    usuario_id: usuario.id,
-                    veiculo: formData.veiculo
+                    usuario_id: usuario.id
                 })
 
             if (erroEntregador) throw erroEntregador
@@ -84,12 +81,12 @@ export default function CadastroEntregador() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-giro-azul-medio/10 to-neutral-0 p-4 py-8">
+        <div className="min-h-screen bg-linear-to-b from-giro-azul-medio/10 to-neutral-0 p-4 py-8">
             <div className="max-w-md mx-auto">
                 <div className="text-center mb-8">
-                    <div className="w-24 h-24 mx-auto mb-4 relative">
+                    <div className="w-72 h-28 mx-auto mb-4 relative">
                         <Image
-                            src="/LOGO-GIRO-NO-MERCADO.png"
+                            src="/LOGO-COM-TEXTO.png"
                             alt="Logo"
                             fill
                             className="object-contain"
@@ -124,25 +121,6 @@ export default function CadastroEntregador() {
                                 className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-azul-medio focus:border-giro-azul-medio text-lg transition-all"
                                 placeholder="Seu nome completo"
                             />
-                        </div>
-
-                        <div>
-                            <label htmlFor="veiculo" className="block text-base font-semibold text-neutral-700 mb-2">
-                                Tipo de Veículo
-                            </label>
-                            <select
-                                id="veiculo"
-                                required
-                                value={formData.veiculo}
-                                onChange={(e) => setFormData({ ...formData, veiculo: e.target.value })}
-                                className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-azul-medio focus:border-giro-azul-medio text-lg transition-all"
-                            >
-                                <option value="">Escolha seu veículo</option>
-                                <option value="moto">🏍️ Moto</option>
-                                <option value="bicicleta">🚴 Bicicleta</option>
-                                <option value="a-pe">🚶 A pé</option>
-                                <option value="carro">🚗 Carro</option>
-                            </select>
                         </div>
 
                         <div>
@@ -196,7 +174,7 @@ export default function CadastroEntregador() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-giro-azul-medio hover:opacity-90 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch mt-6"
+                            className="w-full bg-giro-azul-medio active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch mt-6"
                         >
                             {loading ? 'Criando conta...' : 'Criar Conta'}
                         </button>
@@ -205,7 +183,7 @@ export default function CadastroEntregador() {
 
                 <button
                     onClick={() => router.push('/')}
-                    className="w-full mt-4 text-neutral-600 hover:text-neutral-900 font-medium"
+                    className="w-full mt-4 text-neutral-600 active:text-neutral-900 font-medium btn-touch"
                 >
                     ← Voltar
                 </button>
