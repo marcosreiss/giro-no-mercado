@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Star, Package, TrendingUp, Calendar, LogOut, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/src/context/AuthContext'
@@ -28,13 +28,7 @@ export default function EntregadorPerfilPage() {
     })
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (user) {
-            carregarDados()
-        }
-    }, [user])
-
-    const carregarDados = async () => {
+    const carregarDados = useCallback(async () => {
         try {
             console.log('🔄 [ENTREGADOR PERFIL] Carregando dados...')
             
@@ -122,19 +116,23 @@ export default function EntregadorPerfilPage() {
             setEstatisticas(estatisticasFinais)
             
             console.log('✅ [ENTREGADOR PERFIL] Dados carregados com sucesso!')
-        } catch (error: any) {
+        } catch (error) {
+            const err = error as Error
             console.error('❌ [ENTREGADOR PERFIL] ERRO FATAL ao carregar dados:', {
-                message: error?.message,
-                details: error?.details,
-                hint: error?.hint,
-                code: error?.code,
+                message: err?.message,
                 error: error
             })
-            showError(`Erro ao carregar dados: ${error?.message || 'Erro desconhecido'}`)
+            showError(`Erro ao carregar dados: ${err?.message || 'Erro desconhecido'}`)
         } finally {
             setLoading(false)
         }
-    }
+    }, [user, showError])
+
+    useEffect(() => {
+        if (user) {
+            carregarDados()
+        }
+    }, [user, carregarDados])
 
     const toggleDisponibilidade = async () => {
         if (!entregador) return
