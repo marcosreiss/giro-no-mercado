@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/cadastro/cliente/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useState } from 'react'
@@ -38,14 +38,14 @@ export default function CadastroClientePage() {
         setLoading(true)
 
         try {
-            // Verificar se username já existe
-            const { data: existente } = await supabase
+            // Verificar se username já existe - CORRIGIDO
+            const { data: existente, error: erroConsulta } = await supabase
                 .from('usuarios')
                 .select('username')
                 .eq('username', formData.username)
-                .single()
 
-            if (existente) {
+            // Se retornou dados, username já existe
+            if (!erroConsulta && existente && existente.length > 0) {
                 setErro('Este nome de usuário já está em uso')
                 setLoading(false)
                 return
@@ -81,10 +81,10 @@ export default function CadastroClientePage() {
             <div className="max-w-md mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="w-24 h-24 mx-auto mb-4 relative">
+                    <div className="w-72 h-28 mx-auto mb-4 relative">
                         <Image
-                            src="/LOGO-GIRO-NO-MERCADO.png"
-                            alt="Logo"
+                            src="/LOGO-COM-TEXTO.png"
+                            alt="Giro no Mercado"
                             fill
                             className="object-contain"
                         />
@@ -180,7 +180,7 @@ export default function CadastroClientePage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-gradient-secundario hover:opacity-90 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch mt-6"
+                            className="w-full bg-gradient-secundario active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch mt-6"
                         >
                             {loading ? 'Criando conta...' : 'Criar Conta'}
                         </button>
@@ -190,7 +190,7 @@ export default function CadastroClientePage() {
                 {/* Voltar */}
                 <button
                     onClick={() => router.push('/')}
-                    className="w-full mt-4 text-neutral-600 hover:text-neutral-900 font-medium"
+                    className="w-full mt-4 text-neutral-600 active:text-neutral-900 font-medium btn-touch"
                 >
                     ← Voltar
                 </button>
