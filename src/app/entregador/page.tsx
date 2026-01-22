@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/entregador/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Package, Wallet, Star, Clock, MapPin } from 'lucide-react'
 import { supabase } from '@/src/lib/supabase'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
-import { formatarMoeda, tempoRelativo } from '@/src/lib/utils'
+import { tempoRelativo } from '@/src/lib/utils'
 
 interface Pedido {
     id: string
@@ -33,16 +34,10 @@ export default function EntregadorPage() {
         saldoCarteira: 0
     })
 
-    useEffect(() => {
-        if (user) {
-            carregarDados()
-        }
-    }, [user])
-
-    const carregarDados = async () => {
+    const carregarDados = useCallback(async () => {
         try {
             console.log('🔄 [ENTREGADOR DASHBOARD] Carregando dados...')
-            
+
             // Buscar dados do entregador
             console.log('🔍 [ENTREGADOR DASHBOARD] Buscando dados do entregador, user_id:', user?.id)
             const { data: entregador, error: entregadorError } = await supabase
@@ -68,7 +63,7 @@ export default function EntregadorPage() {
 
             console.log('✅ [ENTREGADOR DASHBOARD] Entregador encontrado:', entregador)
             setDisponivel(entregador.disponivel)
-            
+
             // Buscar pedidos disponíveis (aprovados, pagos, sem entregador)
             console.log('🔍 [ENTREGADOR DASHBOARD] Buscando pedidos disponíveis...')
             const { data: pedidosData, error: pedidosError } = await supabase
@@ -114,7 +109,7 @@ export default function EntregadorPage() {
             console.log('🔍 [ENTREGADOR DASHBOARD] Calculando estatísticas...')
             const hoje = new Date()
             hoje.setHours(0, 0, 0, 0)
-            
+
             const { data: entregasHoje, error: entregasError } = await supabase
                 .from('pedidos')
                 .select('taxa_entrega')
@@ -143,7 +138,7 @@ export default function EntregadorPage() {
 
             console.log('📊 [ENTREGADOR DASHBOARD] Estatísticas finais:', statsFinais)
             setStats(statsFinais)
-            
+
             console.log('✅ [ENTREGADOR DASHBOARD] Dados carregados com sucesso!')
         } catch (err: any) {
             console.error('❌ [ENTREGADOR DASHBOARD] ERRO FATAL ao carregar dados:', {
@@ -157,7 +152,13 @@ export default function EntregadorPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [user?.id, error])
+
+    useEffect(() => {
+        if (user) {
+            carregarDados()
+        }
+    }, [user, carregarDados])
 
     const toggleDisponibilidade = async () => {
         try {
@@ -179,65 +180,87 @@ export default function EntregadorPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Status Toggle */}
-            <div className="bg-neutral-0 rounded-2xl p-5 shadow-lg border-2 border-neutral-200">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <p className="text-sm text-neutral-600 mb-1">Seu Status</p>
-                        <p className="font-bold text-xl text-neutral-900">
+        <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-8 px-3 sm:px-0">
+            {/* Status Toggle - Grande e destacado */}
+            <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-xl border-2 sm:border-4 border-neutral-300">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="flex-1">
+                        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600 mb-1 font-semibold">
+                            Seu Status Agora
+                        </p>
+                        <p style={{ fontSize: 'clamp(1.25rem, 4vw + 0.5rem, 1.75rem)' }} className="font-bold text-neutral-900 leading-tight">
                             {disponivel ? '🟢 Disponível' : '🔴 Indisponível'}
                         </p>
                     </div>
                     <button
                         onClick={toggleDisponibilidade}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all btn-touch ${disponivel
-                            ? 'bg-error text-neutral-0 active:opacity-80'
-                            : 'bg-success text-neutral-0 active:opacity-80'
+                        style={{
+                            fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)',
+                            minHeight: 'clamp(3rem, 8vw, 3.5rem)'
+                        }}
+                        className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold transition-all btn-touch shadow-lg flex-shrink-0 w-full sm:w-auto ${disponivel
+                            ? 'bg-error text-neutral-0 active:opacity-80 border-2 border-error'
+                            : 'bg-success text-neutral-0 active:opacity-80 border-2 border-success'
                             }`}
                     >
-                        {disponivel ? 'Pausar' : 'Ativar'}
+                        {disponivel ? '⏸️ Pausar' : '▶️ Ativar'}
                     </button>
                 </div>
-                <p className="text-sm text-neutral-500">
+                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-500 leading-relaxed">
                     {disponivel
-                        ? 'Você receberá notificações de novas entregas'
-                        : 'Ative para começar a receber entregas'}
+                        ? '✅ Você receberá notificações de novas entregas'
+                        : '⏸️ Ative para começar a receber entregas'}
                 </p>
             </div>
 
-            {/* Cards de resumo */}
-            <div className="grid grid-cols-3 gap-3">
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-giro-azul-medio/20">
-                    <p className="text-neutral-600 text-xs mb-1">Hoje</p>
-                    <p className="text-2xl font-bold text-giro-azul-medio">
+            {/* Cards de resumo - Grandes e legíveis */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg border-2 sm:border-4 border-giro-azul-medio/30 text-center">
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        Hoje
+                    </p>
+                    <p style={{ fontSize: 'clamp(1.5rem, 6vw + 0.5rem, 2.5rem)' }} className="font-bold text-giro-azul-medio leading-none">
                         {stats.entregasHoje}
                     </p>
-                </div>
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-success/20">
-                    <p className="text-neutral-600 text-xs mb-1">Ganhos</p>
-                    <p className="text-2xl font-bold text-success">
-                        R$ {stats.ganhosHoje}
+                    <p style={{ fontSize: 'clamp(0.6875rem, 1.5vw, 0.75rem)' }} className="text-neutral-500 mt-0.5 sm:mt-1">
+                        entregas
                     </p>
                 </div>
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-giro-amarelo/20">
-                    <p className="text-neutral-600 text-xs mb-1">Nota</p>
-                    <p className="text-2xl font-bold text-giro-amarelo">
-                        {stats.avaliacaoMedia.toFixed(1)} ⭐
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg border-2 sm:border-4 border-success/30 text-center">
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        Ganhos
+                    </p>
+                    <p style={{ fontSize: 'clamp(1.125rem, 4.5vw + 0.5rem, 1.75rem)' }} className="font-bold text-success leading-none">
+                        R$ {stats.ganhosHoje.toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: 'clamp(0.6875rem, 1.5vw, 0.75rem)' }} className="text-neutral-500 mt-0.5 sm:mt-1">
+                        hoje
+                    </p>
+                </div>
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg border-2 sm:border-4 border-giro-amarelo/30 text-center">
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        Nota
+                    </p>
+                    <p style={{ fontSize: 'clamp(1.5rem, 5vw + 0.5rem, 2rem)' }} className="font-bold text-giro-amarelo leading-none">
+                        {stats.avaliacaoMedia.toFixed(1)}
+                    </p>
+                    <p style={{ fontSize: 'clamp(0.6875rem, 1.5vw, 0.75rem)' }} className="text-neutral-500 mt-0.5 sm:mt-1">
+                        ⭐ média
                     </p>
                 </div>
             </div>
 
             {/* Entregas disponíveis */}
             <section>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-neutral-900">
-                        {disponivel ? 'Entregas Disponíveis' : 'Você está em pausa'}
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h2 style={{ fontSize: 'clamp(1.125rem, 3.5vw + 0.5rem, 1.5rem)' }} className="font-bold text-neutral-900">
+                        {disponivel ? '📦 Entregas Disponíveis' : '😴 Você está em pausa'}
                     </h2>
                     {pedidosDisponiveis.length > 0 && disponivel && (
                         <button
                             onClick={() => router.push('/entregador/entregas')}
-                            className="text-giro-azul-medio font-semibold text-sm active:opacity-70"
+                            style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }}
+                            className="text-giro-azul-medio font-bold active:opacity-70 btn-touch"
                         >
                             Ver todas →
                         </button>
@@ -245,54 +268,68 @@ export default function EntregadorPage() {
                 </div>
 
                 {!disponivel ? (
-                    <div className="bg-neutral-100 rounded-2xl p-8 text-center border-2 border-neutral-200">
-                        <div className="text-6xl mb-3">😴</div>
-                        <p className="text-neutral-600 text-lg font-semibold">
+                    <div className="bg-neutral-100 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center border-2 border-neutral-200">
+                        <div style={{ fontSize: 'clamp(3rem, 10vw, 4.5rem)' }} className="mb-2 sm:mb-3">
+                            😴
+                        </div>
+                        <p style={{ fontSize: 'clamp(1rem, 3vw + 0.5rem, 1.25rem)' }} className="text-neutral-900 font-bold mb-2">
                             Você está em pausa
                         </p>
-                        <p className="text-neutral-500 text-sm mt-2">
+                        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-500">
                             Ative seu status para receber entregas
                         </p>
                     </div>
                 ) : loading ? (
-                    <div className="bg-neutral-0 rounded-2xl p-8 text-center border-2 border-neutral-200">
-                        <p className="text-neutral-600">Carregando...</p>
+                    <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center border-2 border-neutral-200">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 border-4 border-giro-azul-medio border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                        <p style={{ fontSize: 'clamp(1rem, 2.5vw + 0.25rem, 1.125rem)' }} className="text-neutral-600 font-semibold">
+                            Buscando entregas...
+                        </p>
                     </div>
                 ) : pedidosDisponiveis.length === 0 ? (
-                    <div className="bg-neutral-0 rounded-2xl p-8 text-center border-2 border-neutral-200">
-                        <div className="text-6xl mb-3">📍</div>
-                        <p className="text-neutral-600 text-lg font-semibold">
+                    <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center border-2 border-neutral-200 shadow-md">
+                        <div style={{ fontSize: 'clamp(3rem, 10vw, 4.5rem)' }} className="mb-2 sm:mb-3">
+                            📍
+                        </div>
+                        <p style={{ fontSize: 'clamp(1rem, 3vw + 0.5rem, 1.25rem)' }} className="text-neutral-900 font-bold mb-2">
                             Nenhuma entrega disponível
                         </p>
-                        <p className="text-neutral-500 text-sm mt-2">
+                        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-500">
                             Aguarde novos pedidos aparecerem
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 sm:space-y-4">
                         {pedidosDisponiveis.slice(0, 3).map((pedido) => (
                             <button
                                 key={pedido.id}
                                 onClick={() => router.push('/entregador/entregas')}
-                                className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-giro-azul-medio/30 active:bg-neutral-50 transition-all btn-touch"
+                                style={{ minHeight: 'clamp(5rem, 12vw, 6rem)' }}
+                                className="w-full bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-giro-azul-medio/40 active:bg-neutral-50 active:border-giro-azul-medio transition-all btn-touch shadow-md"
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <p className="font-bold text-neutral-900 mb-1">
+                                <div className="flex items-start gap-3 sm:gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <p style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-neutral-900 mb-1 sm:mb-2 truncate">
                                             {pedido.usuarios.nome_completo}
                                         </p>
-                                        <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
-                                            <MapPin size={14} />
-                                            <span>{pedido.entrada_retirada}</span>
+                                        <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                                            <MapPin className="flex-shrink-0 text-neutral-600" size={16} />
+                                            <span style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600 font-semibold truncate">
+                                                {pedido.entrada_retirada}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-neutral-500">
-                                            <Clock size={12} />
-                                            <span>{tempoRelativo(pedido.criado_em)}</span>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="flex-shrink-0 text-neutral-500" size={14} />
+                                            <span style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-500">
+                                                {tempoRelativo(pedido.criado_em)}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-neutral-500">Ganho</p>
-                                        <p className="text-lg font-bold text-success">
+                                    <div className="text-right flex-shrink-0">
+                                        <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-500 mb-0.5 font-semibold">
+                                            Seu ganho
+                                        </p>
+                                        <p style={{ fontSize: 'clamp(1.25rem, 4vw + 0.5rem, 1.75rem)' }} className="font-bold text-success leading-none">
                                             R$ 5,00
                                         </p>
                                     </div>
@@ -300,7 +337,7 @@ export default function EntregadorPage() {
                             </button>
                         ))}
                         {pedidosDisponiveis.length > 3 && (
-                            <p className="text-center text-sm text-neutral-500">
+                            <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-center text-neutral-600 font-semibold py-2">
                                 + {pedidosDisponiveis.length - 3} entregas disponíveis
                             </p>
                         )}
@@ -310,65 +347,76 @@ export default function EntregadorPage() {
 
             {/* Menu de ações */}
             <section>
-                <h3 className="text-xl font-bold text-neutral-900 mb-4">Menu</h3>
-                <div className="space-y-3">
+                <h3 style={{ fontSize: 'clamp(1.125rem, 3.5vw + 0.5rem, 1.5rem)' }} className="font-bold text-neutral-900 mb-3 sm:mb-4">
+                    ⚡ Menu
+                </h3>
+                <div className="space-y-3 sm:space-y-4">
                     <button
                         onClick={() => router.push('/entregador/entregas')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-neutral-300 active:bg-neutral-50 active:border-giro-azul-medio transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="bg-giro-azul-medio/10 p-3 rounded-xl">
-                                <Package size={28} className="text-giro-azul-medio" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-giro-azul-medio/20 p-3 rounded-xl flex-shrink-0">
+                                <Package className="text-giro-azul-medio" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
                             </div>
-                            <div className="flex-1">
-                                <h4 className="text-lg font-bold text-neutral-900">
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-neutral-900 mb-0.5 leading-tight">
                                     Minhas Entregas
                                 </h4>
-                                <p className="text-sm text-neutral-600">
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600">
                                     Histórico de entregas realizadas
                                 </p>
                             </div>
-                            <div className="text-2xl text-neutral-400">→</div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-neutral-400 flex-shrink-0">
+                                →
+                            </div>
                         </div>
                     </button>
 
                     <button
                         onClick={() => router.push('/entregador/carteira')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-success/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-success/40 active:bg-success/20 transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="bg-success/10 p-3 rounded-xl">
-                                <Wallet size={28} className="text-success" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-success/30 p-3 rounded-xl flex-shrink-0">
+                                <Wallet className="text-success" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
                             </div>
-                            <div className="flex-1">
-                                <h4 className="text-lg font-bold text-neutral-900">
-                                    Minha Carteira
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-success mb-0.5 leading-tight">
+                                    💰 Minha Carteira
                                 </h4>
-                                <p className="text-sm text-neutral-600">
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-success/90 font-semibold">
                                     Saldo: R$ {stats.saldoCarteira.toFixed(2)}
                                 </p>
                             </div>
-                            <div className="text-2xl text-neutral-400">→</div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-success/60 flex-shrink-0">
+                                →
+                            </div>
                         </div>
                     </button>
 
                     <button
                         onClick={() => router.push('/entregador/avaliacoes')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-neutral-300 active:bg-neutral-50 active:border-giro-amarelo transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="bg-giro-amarelo/10 p-3 rounded-xl">
-                                <Star size={28} className="text-giro-amarelo" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-giro-amarelo/20 p-3 rounded-xl flex-shrink-0">
+                                <Star className="text-giro-amarelo" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
                             </div>
-                            <div className="flex-1">
-                                <h4 className="text-lg font-bold text-neutral-900">
-                                    Minhas Avaliações
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-neutral-900 mb-0.5 leading-tight">
+                                    ⭐ Minhas Avaliações
                                 </h4>
-                                <p className="text-sm text-neutral-600">
-                                    Ver feedback dos clientes
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600">
+                                    Nota média: {stats.avaliacaoMedia.toFixed(1)}
                                 </p>
                             </div>
-                            <div className="text-2xl text-neutral-400">→</div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-neutral-400 flex-shrink-0">
+                                →
+                            </div>
                         </div>
                     </button>
                 </div>
