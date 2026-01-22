@@ -7,11 +7,14 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function CadastroClientePage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [erro, setErro] = useState('')
+    const [mostrarSenha, setMostrarSenha] = useState(true)
+    const [mostrarConfirmar, setMostrarConfirmar] = useState(true)
 
     const [formData, setFormData] = useState({
         nome_completo: '',
@@ -38,23 +41,20 @@ export default function CadastroClientePage() {
         setLoading(true)
 
         try {
-            // Verificar se username já existe - CORRIGIDO
+            // Verificar se username já existe
             const { data: existente, error: erroConsulta } = await supabase
                 .from('usuarios')
                 .select('username')
                 .eq('username', formData.username)
 
-            // Se retornou dados, username já existe
             if (!erroConsulta && existente && existente.length > 0) {
                 setErro('Este nome de usuário já está em uso')
                 setLoading(false)
                 return
             }
 
-            // Gerar hash da senha
             const password_hash = await bcrypt.hash(formData.password, 10)
 
-            // Inserir usuário
             const { error } = await supabase
                 .from('usuarios')
                 .insert({
@@ -66,7 +66,6 @@ export default function CadastroClientePage() {
 
             if (error) throw error
 
-            // Redirecionar para login
             router.push('/login?cadastro=sucesso')
         } catch (error: any) {
             console.error('Erro ao cadastrar:', error)
@@ -77,9 +76,8 @@ export default function CadastroClientePage() {
     }
 
     return (
-        <div className="min-h-screen bg-linear-to-b from-giro-verde-claro/10 to-neutral-0 p-4 py-8">
+        <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 p-4 py-8">
             <div className="max-w-md mx-auto">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="w-72 h-28 mx-auto mb-4 relative">
                         <Image
@@ -97,7 +95,6 @@ export default function CadastroClientePage() {
                     </p>
                 </div>
 
-                {/* Formulário */}
                 <form onSubmit={handleSubmit} className="bg-neutral-0 rounded-3xl shadow-xl border border-neutral-200 p-8">
                     {erro && (
                         <div className="bg-error/10 border-2 border-error/30 text-error px-4 py-3 rounded-xl mb-6 font-medium">
@@ -106,7 +103,6 @@ export default function CadastroClientePage() {
                     )}
 
                     <div className="space-y-5">
-                        {/* Nome completo */}
                         <div>
                             <label htmlFor="nome" className="block text-base font-semibold text-neutral-700 mb-2">
                                 Nome Completo
@@ -122,7 +118,6 @@ export default function CadastroClientePage() {
                             />
                         </div>
 
-                        {/* Username */}
                         <div>
                             <label htmlFor="username" className="block text-base font-semibold text-neutral-700 mb-2">
                                 Nome de Usuário
@@ -142,41 +137,56 @@ export default function CadastroClientePage() {
                             </p>
                         </div>
 
-                        {/* Senha */}
                         <div>
                             <label htmlFor="password" className="block text-base font-semibold text-neutral-700 mb-2">
                                 Senha
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                required
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
-                                placeholder="Mínimo 6 caracteres"
-                                autoComplete="new-password"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={mostrarSenha ? "text" : "password"}
+                                    required
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full px-5 py-4 pr-14 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
+                                    placeholder="Mínimo 6 caracteres"
+                                    autoComplete="new-password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setMostrarSenha(!mostrarSenha)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 active:text-neutral-900"
+                                >
+                                    {mostrarSenha ? <Eye size={24} /> : <EyeOff size={24} />}
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Confirmar senha */}
                         <div>
                             <label htmlFor="confirmar" className="block text-base font-semibold text-neutral-700 mb-2">
                                 Confirmar Senha
                             </label>
-                            <input
-                                id="confirmar"
-                                type="password"
-                                required
-                                value={formData.confirmar_password}
-                                onChange={(e) => setFormData({ ...formData, confirmar_password: e.target.value })}
-                                className="w-full px-5 py-4 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
-                                placeholder="Digite a senha novamente"
-                                autoComplete="new-password"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="confirmar"
+                                    type={mostrarConfirmar ? "text" : "password"}
+                                    required
+                                    value={formData.confirmar_password}
+                                    onChange={(e) => setFormData({ ...formData, confirmar_password: e.target.value })}
+                                    className="w-full px-5 py-4 pr-14 border-2 border-neutral-300 rounded-xl focus:ring-2 focus:ring-giro-verde-claro focus:border-giro-verde-claro text-lg transition-all"
+                                    placeholder="Digite a senha novamente"
+                                    autoComplete="new-password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setMostrarConfirmar(!mostrarConfirmar)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 active:text-neutral-900"
+                                >
+                                    {mostrarConfirmar ? <Eye size={24} /> : <EyeOff size={24} />}
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Botão */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -187,7 +197,6 @@ export default function CadastroClientePage() {
                     </div>
                 </form>
 
-                {/* Voltar */}
                 <button
                     onClick={() => router.push('/')}
                     className="w-full mt-4 text-neutral-600 active:text-neutral-900 font-medium btn-touch"
