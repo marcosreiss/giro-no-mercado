@@ -293,8 +293,54 @@ Formulários em passos
 
 Ícones do Lucide React
 
+Proteção de Rotas - proxy.ts
+O que faz
+Intercepta todas as requisições antes de chegar nas páginas e verifica:
+
+Se o usuário está autenticado (tem cookie session_token)
+
+Se o usuário está tentando acessar a área correta para seu tipo
+
+Funcionamento
+Rotas Públicas (libera acesso)
+/ - Tela inicial
+
+/login - Login
+
+/cadastro/* - Qualquer tela de cadastro
+
+Rotas Privadas (precisa autenticação)
+/cliente/* - Só quem tem user_type=cliente
+
+/comerciante/* - Só quem tem user_type=comerciante
+
+/entregador/* - Só quem tem user_type=entregador
+
+Redirecionamentos
+Não está logado?
+→ Vai para /login
+
+Cliente tentando acessar /comerciante?
+→ Redireciona para /cliente
+
+Comerciante tentando acessar /entregador?
+→ Redireciona para /comerciante
+
+Cookies Usados
+session_token - Token da sessão (30 dias)
+
+user_type - Tipo do usuário (cliente/comerciante/entregador)
+
+Arquivos Atualizados
+src/proxy.ts - Middleware de proteção
+
+src/lib/auth.ts - Salvando user_type no cookie durante login
+
+Precisa instalar: npm install js-cookie @types/js-cookie
+
+Simples assim: ninguém acessa área que não é sua, e quem não está logado vai pro login automaticamente.
+
 ⚠️ Pendências Importantes
-Toast Visual - Notificações existem mas não aparecem na tela
 
 Proteção de Rotas - Verificar tipo de usuário nas rotas
 

@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/src/lib/supabase'
 import bcrypt from 'bcryptjs'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'

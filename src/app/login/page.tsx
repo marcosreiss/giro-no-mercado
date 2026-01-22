@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { login } from '@/lib/auth'
+import { login } from '@/src/lib/auth'
 import { useAuth } from '@/src/context/AuthContext'
 import Image from 'next/image'
 

@@ -1,8 +1,10 @@
+// src/app/layout.tsx - ATUALIZAR
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '../context/AuthContext'
-import { NotificationProvider } from '../context/NotificationContext'
+import { AuthProvider } from '@/src/context/AuthContext'
+import { NotificationProvider } from '@/src/context/NotificationContext'
+import ToastContainer from '@/src/components/ToastContainer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,6 +24,7 @@ export default function RootLayout({
         <NotificationProvider>
           <AuthProvider>
             {children}
+            <ToastContainer />
           </AuthProvider>
         </NotificationProvider>
       </body>
