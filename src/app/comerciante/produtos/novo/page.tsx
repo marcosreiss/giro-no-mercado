@@ -2,6 +2,7 @@
 // src/app/comerciante/produtos/novo/page.tsx
 'use client'
 
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -11,6 +12,7 @@ import { useAuth } from '@/src/context/AuthContext'
 import { uploadImage } from '@/src/lib/storage'
 import { supabase } from '@/src/lib/supabase'
 
+
 interface ProdutoFormData {
     nome: string
     categoria: string
@@ -19,6 +21,7 @@ interface ProdutoFormData {
     cota_disponivel: string
     foto_url: string
 }
+
 
 export default function NovoProdutoPage() {
     const router = useRouter()
@@ -30,10 +33,13 @@ export default function NovoProdutoPage() {
     const [fotoPath, setFotoPath] = useState<string>('')
     const [uploadingFoto, setUploadingFoto] = useState(false)
 
+
     const { register, handleSubmit, formState: { errors }, trigger, setValue } = useForm<ProdutoFormData>()
+
 
     const proximoPasso = async () => {
         let camposValidar: any = []
+
 
         switch (passo) {
             case 1:
@@ -50,19 +56,34 @@ export default function NovoProdutoPage() {
                 break
         }
 
+
         const isValid = await trigger(camposValidar)
         if (isValid) {
             setPasso(passo + 1)
         }
     }
 
+
     const passoAnterior = () => {
         setPasso(passo - 1)
     }
 
+
+    // Handler para prevenir submit com Enter e avançar para próximo passo
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            if (passo < 5) {
+                proximoPasso()
+            }
+        }
+    }
+
+
     const handleFotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
+
 
         // Validar tamanho (5MB)
         if (file.size > 5 * 1024 * 1024) {
@@ -70,12 +91,14 @@ export default function NovoProdutoPage() {
             return
         }
 
+
         // Preview local
         const reader = new FileReader()
         reader.onloadend = () => {
             setFotoPreview(reader.result as string)
         }
         reader.readAsDataURL(file)
+
 
         // Upload
         setUploadingFoto(true)
@@ -92,6 +115,7 @@ export default function NovoProdutoPage() {
         }
     }
 
+
     const onSubmit = async (data: ProdutoFormData) => {
         // Prevenir submit se ainda está fazendo upload
         if (uploadingFoto) {
@@ -99,7 +123,9 @@ export default function NovoProdutoPage() {
             return
         }
 
+
         setLoading(true)
+
 
         try {
             // Buscar comerciante_id
@@ -109,9 +135,11 @@ export default function NovoProdutoPage() {
                 .eq('usuario_id', user?.id)
                 .single()
 
+
             if (!comerciante) {
                 throw new Error('Comerciante não encontrado')
             }
+
 
             // Inserir produto
             const { error: erroInsert } = await supabase
@@ -127,7 +155,9 @@ export default function NovoProdutoPage() {
                     ativo: true
                 })
 
+
             if (erroInsert) throw erroInsert
+
 
             success('Produto cadastrado com sucesso!')
             setTimeout(() => router.push('/comerciante/produtos'), 1500)
@@ -138,6 +168,7 @@ export default function NovoProdutoPage() {
             setLoading(false)
         }
     }
+
 
     return (
         <div className="space-y-6">
@@ -158,7 +189,12 @@ export default function NovoProdutoPage() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="bg-neutral-0 rounded-2xl shadow-lg border-2 border-neutral-200 p-6">
+
+            <form
+                onSubmit={handleSubmit(onSubmit)}
+                onKeyDown={handleKeyDown}
+                className="bg-neutral-0 rounded-2xl shadow-lg border-2 border-neutral-200 p-6"
+            >
                 {/* Passo 1: Nome do Produto */}
                 {passo === 1 && (
                     <div className="space-y-4">
@@ -187,6 +223,7 @@ export default function NovoProdutoPage() {
                     </div>
                 )}
 
+
                 {/* Passo 2: Categoria */}
                 {passo === 2 && (
                     <div className="space-y-4">
@@ -214,6 +251,7 @@ export default function NovoProdutoPage() {
                         </div>
                     </div>
                 )}
+
 
                 {/* Passo 3: Preço e Unidade */}
                 {passo === 3 && (
@@ -247,6 +285,7 @@ export default function NovoProdutoPage() {
                             )}
                         </div>
 
+
                         <div>
                             <label htmlFor="unidade" className="block text-lg font-semibold text-neutral-700 mb-2">
                                 Como você vende?
@@ -267,6 +306,7 @@ export default function NovoProdutoPage() {
                         </div>
                     </div>
                 )}
+
 
                 {/* Passo 4: Quantidade Disponível */}
                 {passo === 4 && (
@@ -296,6 +336,7 @@ export default function NovoProdutoPage() {
                     </div>
                 )}
 
+
                 {/* Passo 5: Foto */}
                 {passo === 5 && (
                     <div className="space-y-4">
@@ -306,6 +347,7 @@ export default function NovoProdutoPage() {
                             <p className="text-sm text-neutral-600 mb-4">
                                 💡 Você pode escolher da galeria ou tirar agora mesmo. A foto ajuda o cliente a ver o produto!
                             </p>
+
 
                             {/* Preview ou botão de upload */}
                             {fotoPreview ? (
@@ -334,7 +376,14 @@ export default function NovoProdutoPage() {
                                     )}
                                 </div>
                             ) : (
-                                <label className="block w-full h-64 bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-xl flex flex-col items-center justify-center gap-3 active:bg-neutral-200 transition-all cursor-pointer btn-touch">
+                                <label
+                                    onClick={(e) => {
+                                        if (uploadingFoto) {
+                                            e.preventDefault()
+                                        }
+                                    }}
+                                    className="block w-full h-64 bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-xl flex flex-col items-center justify-center gap-3 active:bg-neutral-200 transition-all cursor-pointer btn-touch"
+                                >
                                     <Camera size={56} className="text-neutral-400" />
                                     <p className="text-neutral-600 font-semibold text-lg">Escolher Foto</p>
                                     <p className="text-sm text-neutral-500">JPG, PNG ou WebP (máx. 5MB)</p>
@@ -348,6 +397,7 @@ export default function NovoProdutoPage() {
                                 </label>
                             )}
 
+
                             <p className="text-sm text-neutral-500 mt-3 text-center">
                                 Foto é opcional, mas ajuda bastante nas vendas!
                             </p>
@@ -355,11 +405,12 @@ export default function NovoProdutoPage() {
                     </div>
                 )}
 
+
                 {/* Botões de navegação */}
                 <div className="flex gap-3 mt-8">
                     {passo > 1 && (
                         <button
-                            type="button"  // ✅ JÁ TEM
+                            type="button"
                             onClick={passoAnterior}
                             disabled={uploadingFoto}
                             className="flex-1 bg-neutral-200 active:opacity-80 text-neutral-900 font-bold py-5 px-6 rounded-xl text-lg transition-all btn-touch flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -369,9 +420,10 @@ export default function NovoProdutoPage() {
                         </button>
                     )}
 
+
                     {passo < 5 ? (
                         <button
-                            type="button"  // ⚠️ FALTAVA ISSO! Estava fazendo submit
+                            type="button"
                             onClick={proximoPasso}
                             className="flex-1 bg-giro-amarelo active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all shadow-lg btn-touch flex items-center justify-center gap-2"
                         >
@@ -380,7 +432,7 @@ export default function NovoProdutoPage() {
                         </button>
                     ) : (
                         <button
-                            type="submit"  // ✅ ESSE SIM DEVE SER SUBMIT
+                            type="submit"
                             disabled={loading || uploadingFoto}
                             className="flex-1 bg-giro-amarelo active:opacity-80 text-neutral-0 font-bold py-5 px-6 rounded-xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg btn-touch"
                         >
@@ -389,6 +441,7 @@ export default function NovoProdutoPage() {
                     )}
                 </div>
             </form>
+
 
             {/* Cancelar */}
             <button
