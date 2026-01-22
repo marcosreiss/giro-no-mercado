@@ -4,7 +4,7 @@
 import { ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Package, ShoppingBag, User, LogOut } from 'lucide-react'
+import { Package, ShoppingBag, User, LogOut, ClipboardList } from 'lucide-react'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
 
@@ -22,6 +22,7 @@ export default function ComercianteLayout({ children }: { children: ReactNode })
 
     const navItems = [
         { id: 'home', label: 'Início', icon: ShoppingBag, path: '/comerciante' },
+        { id: 'pedidos', label: 'Pedidos', icon: ClipboardList, path: '/comerciante/pedidos' },
         { id: 'produtos', label: 'Produtos', icon: Package, path: '/comerciante/produtos' },
         { id: 'perfil', label: 'Perfil', icon: User, path: '/comerciante/perfil' }
     ]
@@ -61,7 +62,7 @@ export default function ComercianteLayout({ children }: { children: ReactNode })
 
             {/* Bottom Nav */}
             <nav className="bg-neutral-0 border-t-2 border-neutral-200 shadow-2xl fixed bottom-0 left-0 right-0 z-50">
-                <div className="max-w-screen-xl mx-auto px-2">
+                <div className="max-w-screen-xl mx-auto px-1 sm:px-2">
                     <div className="flex items-center justify-around">
                         {navItems.map((item) => {
                             const Icon = item.icon
@@ -71,14 +72,27 @@ export default function ComercianteLayout({ children }: { children: ReactNode })
                                 <button
                                     key={item.id}
                                     onClick={() => router.push(item.path)}
-                                    className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 btn-touch ${isActive ? 'text-giro-amarelo' : 'text-neutral-600 active:text-giro-amarelo'
+                                    className={`flex-1 flex flex-col items-center gap-1 py-3 px-1 sm:px-2 btn-touch transition-all ${isActive
+                                            ? 'text-giro-amarelo'
+                                            : 'text-neutral-600 active:text-giro-amarelo'
                                         }`}
+                                    style={{ minWidth: 'clamp(4rem, 20vw, 5.5rem)' }}
                                 >
-                                    <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                                    <span className={`text-xs ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                                    <Icon
+                                        size={24}
+                                        strokeWidth={isActive ? 2.5 : 2}
+                                        className="flex-shrink-0"
+                                    />
+                                    <span
+                                        className={`text-xs leading-tight text-center ${isActive ? 'font-bold' : 'font-semibold'
+                                            }`}
+                                        style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)' }}
+                                    >
                                         {item.label}
                                     </span>
-                                    {isActive && <div className="w-12 h-1 bg-giro-amarelo rounded-full mt-1" />}
+                                    {isActive && (
+                                        <div className="w-8 sm:w-12 h-1 bg-giro-amarelo rounded-full mt-0.5" />
+                                    )}
                                 </button>
                             )
                         })}

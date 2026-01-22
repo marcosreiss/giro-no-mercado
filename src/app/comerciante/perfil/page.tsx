@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Store, MapPin, User, Calendar, LogOut, TrendingUp } from 'lucide-react'
+import { Store, MapPin, User, Package, ClipboardList, TrendingUp, LogOut } from 'lucide-react'
 import { useAuth } from '@/src/context/AuthContext'
 import { useNotification } from '@/src/context/NotificationContext'
 import { supabase } from '@/src/lib/supabase'
@@ -28,13 +29,7 @@ export default function ComerciantePerfilPage() {
     })
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (user) {
-            carregarDados()
-        }
-    }, [user])
-
-    const carregarDados = async () => {
+    const carregarDados = useCallback(async () => {
         try {
             console.log('🔄 Carregando dados do perfil do comerciante...')
             
@@ -120,7 +115,13 @@ export default function ComerciantePerfilPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [user?.id, showError])
+
+    useEffect(() => {
+        if (user) {
+            carregarDados()
+        }
+    }, [user, carregarDados])
 
     const handleLogout = async () => {
         await logout()
@@ -129,30 +130,37 @@ export default function ComerciantePerfilPage() {
     }
 
     if (loading) {
-        return <div className="text-center py-12">Carregando...</div>
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] px-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 border-4 border-giro-amarelo border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p style={{ fontSize: 'clamp(1.125rem, 3vw + 0.5rem, 1.5rem)' }} className="font-bold text-neutral-700 text-center">
+                    Carregando seu perfil...
+                </p>
+            </div>
+        )
     }
 
     return (
-        <div className="space-y-6">
-            {/* Perfil da banca */}
-            <div className="bg-giro-amarelo text-neutral-900 rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-neutral-900/10 p-4 rounded-full">
-                        <Store size={40} />
+        <div className="space-y-5 sm:space-y-6 pb-6 sm:pb-8 px-3 sm:px-0">
+            {/* Perfil da banca - Card destacado */}
+            <div className="bg-giro-amarelo text-neutral-900 rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-xl">
+                <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                    <div className="bg-neutral-900/10 p-3 sm:p-4 rounded-full flex-shrink-0">
+                        <Store style={{ width: 'clamp(2rem, 6vw, 2.5rem)', height: 'clamp(2rem, 6vw, 2.5rem)' }} />
                     </div>
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-bold">
+                    <div className="flex-1 min-w-0">
+                        <h2 style={{ fontSize: 'clamp(1.25rem, 4vw + 0.5rem, 1.75rem)' }} className="font-bold leading-tight truncate">
                             {comerciante?.banca_nome}
                         </h2>
-                        <p className="text-neutral-900/80 text-sm">
+                        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-900/80 truncate">
                             {user?.nome_completo}
                         </p>
                     </div>
                 </div>
                 {comerciante?.galpao && (
-                    <div className="bg-neutral-900/10 rounded-xl p-3 flex items-center gap-2 text-sm">
-                        <MapPin size={18} />
-                        <span>
+                    <div className="bg-neutral-900/10 rounded-xl p-3 sm:p-4 flex items-center gap-2">
+                        <MapPin className="flex-shrink-0" size={20} />
+                        <span style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="font-semibold">
                             Galpão {comerciante.galpao}
                             {comerciante.banca_codigo && ` - Box ${comerciante.banca_codigo}`}
                         </span>
@@ -160,52 +168,70 @@ export default function ComerciantePerfilPage() {
                 )}
             </div>
 
-            {/* Estatísticas */}
-            <div className="grid grid-cols-2 gap-3">
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-giro-amarelo/20 text-center">
-                    <p className="text-xs text-neutral-600 mb-1">Produtos</p>
-                    <p className="text-2xl font-bold text-giro-amarelo">
+            {/* Estatísticas - Cards grandes e legíveis */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg border-2 sm:border-4 border-giro-amarelo/30 text-center">
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        Produtos Ativos
+                    </p>
+                    <p style={{ fontSize: 'clamp(1.75rem, 6vw + 0.5rem, 2.5rem)' }} className="font-bold text-giro-amarelo leading-none">
                         {estatisticas.produtosAtivos}
                     </p>
-                    <p className="text-xs text-neutral-500">de {estatisticas.totalProdutos} total</p>
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }} className="text-neutral-500 mt-1">
+                        de {estatisticas.totalProdutos} total
+                    </p>
                 </div>
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-giro-verde-escuro/20 text-center">
-                    <p className="text-xs text-neutral-600 mb-1">Pedidos</p>
-                    <p className="text-2xl font-bold text-giro-verde-escuro">
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg border-2 sm:border-4 border-giro-verde-escuro/30 text-center">
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        Pedidos
+                    </p>
+                    <p style={{ fontSize: 'clamp(1.75rem, 6vw + 0.5rem, 2.5rem)' }} className="font-bold text-giro-verde-escuro leading-none">
                         {estatisticas.pedidosRecebidos}
                     </p>
-                    <p className="text-xs text-neutral-500">recebidos</p>
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }} className="text-neutral-500 mt-1">
+                        recebidos
+                    </p>
                 </div>
-                <div className="bg-neutral-0 rounded-2xl p-4 shadow-md border-2 border-success/20 col-span-2 text-center">
-                    <p className="text-xs text-neutral-600 mb-1">Total de Vendas</p>
-                    <p className="text-3xl font-bold text-success">
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg border-2 sm:border-4 border-success/30 col-span-2 text-center">
+                    <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600 mb-1 sm:mb-2 font-semibold">
+                        💰 Total de Vendas
+                    </p>
+                    <p style={{ fontSize: 'clamp(2rem, 7vw + 0.5rem, 3rem)' }} className="font-bold text-success leading-none">
                         R$ {estatisticas.totalVendas.toFixed(2)}
                     </p>
-                    <p className="text-xs text-neutral-500">em vendas aprovadas</p>
+                    <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }} className="text-neutral-500 mt-1 sm:mt-2">
+                        em vendas aprovadas
+                    </p>
                 </div>
             </div>
 
-            {/* Informações da conta */}
+            {/* Informações da conta - Simplificado */}
             <section>
-                <h3 className="text-xl font-bold text-neutral-900 mb-4">
-                    Informações da Banca
+                <h3 style={{ fontSize: 'clamp(1.125rem, 3.5vw + 0.5rem, 1.5rem)' }} className="font-bold text-neutral-900 mb-3 sm:mb-4">
+                    📋 Dados da Banca
                 </h3>
-                <div className="bg-neutral-0 rounded-2xl p-5 shadow-md border-2 border-neutral-200 space-y-4">
+                <div className="bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-md border-2 border-neutral-200 space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-3">
-                        <Store size={20} className="text-neutral-600" />
-                        <div className="flex-1">
-                            <p className="text-sm text-neutral-600">Nome da Banca</p>
-                            <p className="font-semibold text-neutral-900">{comerciante?.banca_nome}</p>
+                        <Store className="flex-shrink-0 text-neutral-600" size={22} />
+                        <div className="flex-1 min-w-0">
+                            <p style={{ fontSize: 'clamp(0.8125rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-0.5">
+                                Nome da Banca
+                            </p>
+                            <p style={{ fontSize: 'clamp(1rem, 2.5vw + 0.25rem, 1.125rem)' }} className="font-bold text-neutral-900 truncate">
+                                {comerciante?.banca_nome}
+                            </p>
                         </div>
                     </div>
                     {comerciante?.galpao && (
                         <>
-                            <div className="border-t border-neutral-200"></div>
+                            <div className="border-t-2 border-neutral-200"></div>
                             <div className="flex items-center gap-3">
-                                <MapPin size={20} className="text-neutral-600" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-neutral-600">Localização</p>
-                                    <p className="font-semibold text-neutral-900">
+                                <MapPin className="flex-shrink-0 text-neutral-600" size={22} />
+                                <div className="flex-1 min-w-0">
+                                    <p style={{ fontSize: 'clamp(0.8125rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-0.5">
+                                        Localização
+                                    </p>
+                                    <p style={{ fontSize: 'clamp(1rem, 2.5vw + 0.25rem, 1.125rem)' }} className="font-bold text-neutral-900">
                                         Galpão {comerciante.galpao}
                                         {comerciante.banca_codigo && ` - Box ${comerciante.banca_codigo}`}
                                     </p>
@@ -213,99 +239,115 @@ export default function ComerciantePerfilPage() {
                             </div>
                         </>
                     )}
-                    <div className="border-t border-neutral-200"></div>
+                    <div className="border-t-2 border-neutral-200"></div>
                     <div className="flex items-center gap-3">
-                        <User size={20} className="text-neutral-600" />
-                        <div className="flex-1">
-                            <p className="text-sm text-neutral-600">Proprietário</p>
-                            <p className="font-semibold text-neutral-900">{user?.nome_completo}</p>
-                        </div>
-                    </div>
-                    <div className="border-t border-neutral-200"></div>
-                    <div className="flex items-center gap-3">
-                        <Calendar size={20} className="text-neutral-600" />
-                        <div className="flex-1">
-                            <p className="text-sm text-neutral-600">Usuário</p>
-                            <p className="font-semibold text-neutral-900">@{user?.username}</p>
+                        <User className="flex-shrink-0 text-neutral-600" size={22} />
+                        <div className="flex-1 min-w-0">
+                            <p style={{ fontSize: 'clamp(0.8125rem, 2vw + 0.25rem, 0.875rem)' }} className="text-neutral-600 mb-0.5">
+                                Seu Nome
+                            </p>
+                            <p style={{ fontSize: 'clamp(1rem, 2.5vw + 0.25rem, 1.125rem)' }} className="font-bold text-neutral-900 truncate">
+                                {user?.nome_completo}
+                            </p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Ações rápidas */}
+            {/* Ações rápidas - Botões grandes e claros */}
             <section>
-                <h3 className="text-xl font-bold text-neutral-900 mb-4">
-                    Ações Rápidas
+                <h3 style={{ fontSize: 'clamp(1.125rem, 3.5vw + 0.5rem, 1.5rem)' }} className="font-bold text-neutral-900 mb-3 sm:mb-4">
+                    ⚡ Ações Rápidas
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-3 sm:space-y-4">
                     <button
                         onClick={() => router.push('/comerciante/produtos')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-neutral-300 active:bg-neutral-50 active:border-giro-amarelo transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-bold text-neutral-900">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-giro-amarelo/20 p-3 rounded-xl flex-shrink-0">
+                                <Package className="text-giro-amarelo" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-neutral-900 mb-0.5 leading-tight">
                                     Gerenciar Produtos
                                 </h4>
-                                <p className="text-sm text-neutral-600">
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600">
                                     {estatisticas.produtosAtivos} produtos ativos
                                 </p>
                             </div>
-                            <div className="text-2xl text-neutral-400">→</div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-neutral-400 flex-shrink-0">
+                                →
+                            </div>
                         </div>
                     </button>
 
                     <button
                         onClick={() => router.push('/comerciante/pedidos')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-neutral-0 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-neutral-300 active:bg-neutral-50 active:border-giro-verde-escuro transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-bold text-neutral-900">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-giro-verde-escuro/20 p-3 rounded-xl flex-shrink-0">
+                                <ClipboardList className="text-giro-verde-escuro" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-neutral-900 mb-0.5 leading-tight">
                                     Novos Pedidos
                                 </h4>
-                                <p className="text-sm text-neutral-600">
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-neutral-600">
                                     Ver pedidos aguardando
                                 </p>
                             </div>
-                            <div className="text-2xl text-neutral-400">→</div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-neutral-400 flex-shrink-0">
+                                →
+                            </div>
                         </div>
                     </button>
 
                     <button
                         onClick={() => router.push('/comerciante/carteira')}
-                        className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-neutral-200 active:bg-neutral-50 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-success/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-success/40 active:bg-success/20 transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <TrendingUp size={24} className="text-success" />
-                                <div>
-                                    <h4 className="font-bold text-neutral-900">
-                                        Minha Carteira
-                                    </h4>
-                                    <p className="text-sm text-neutral-600">
-                                        R$ {estatisticas.totalVendas.toFixed(2)} em vendas
-                                    </p>
-                                </div>
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-success/30 p-3 rounded-xl flex-shrink-0">
+                                <TrendingUp className="text-success" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-success mb-0.5 leading-tight">
+                                    💰 Minha Carteira
+                                </h4>
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-success/90 font-semibold">
+                                    R$ {estatisticas.totalVendas.toFixed(2)}
+                                </p>
+                            </div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-success/60 flex-shrink-0">
+                                →
                             </div>
                         </div>
                     </button>
 
                     <button
                         onClick={handleLogout}
-                        className="w-full bg-error/10 rounded-2xl p-5 text-left border-2 border-error/30 active:bg-error/20 transition-all btn-touch"
+                        style={{ minHeight: 'clamp(4.5rem, 12vw, 5.5rem)' }}
+                        className="w-full bg-error/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left border-2 sm:border-4 border-error/40 active:bg-error/20 transition-all btn-touch shadow-md"
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <LogOut size={24} className="text-error" />
-                                <div>
-                                    <h4 className="font-bold text-error">
-                                        Sair da Conta
-                                    </h4>
-                                    <p className="text-sm text-error/80">
-                                        Fazer logout
-                                    </p>
-                                </div>
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-error/30 p-3 rounded-xl flex-shrink-0">
+                                <LogOut className="text-error" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 style={{ fontSize: 'clamp(1rem, 3vw + 0.25rem, 1.25rem)' }} className="font-bold text-error mb-0.5 leading-tight">
+                                    Sair da Conta
+                                </h4>
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw + 0.25rem, 1rem)' }} className="text-error/80">
+                                    Fazer logout
+                                </p>
+                            </div>
+                            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="text-error/60 flex-shrink-0">
+                                ×
                             </div>
                         </div>
                     </button>
