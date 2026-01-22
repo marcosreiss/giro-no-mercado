@@ -342,8 +342,6 @@ Simples assim: ninguém acessa área que não é sua, e quem não está logado v
 
 ⚠️ Pendências Importantes
 
-Proteção de Rotas - Verificar tipo de usuário nas rotas
-
 Tela de Carrinho - /cliente/carrinho não existe
 
 Gestão de Produtos - Comerciante não consegue cadastrar produtos
