@@ -1,4 +1,4 @@
-// src/lib/auth.ts - ATUALIZAR a função login
+// src/lib/auth.ts - ATUALIZAR função login
 import { supabase } from "./supabase";
 import bcrypt from "bcryptjs";
 import Cookies from "js-cookie";
@@ -58,10 +58,19 @@ export async function login(
       .update({ ultimo_login: new Date().toISOString() })
       .eq("id", usuarioData.id);
 
-    // Criar sessão se "lembrar-me"
-    let token = null;
+    const user: User = {
+      id: usuarioData.id,
+      username: usuarioData.username,
+      nome_completo: usuarioData.nome_completo,
+      tipo_usuario: usuarioData.tipo_usuario,
+    };
+
+    // Salvar no localStorage (sempre)
+    localStorage.setItem("user", JSON.stringify(user));
+
+    // Se "lembrar-me", criar sessão persistente
     if (lembrarMe) {
-      token = crypto.randomUUID();
+      const token = crypto.randomUUID();
       const expiraEm = new Date();
       expiraEm.setDate(expiraEm.getDate() + 30); // 30 dias
 
@@ -71,7 +80,7 @@ export async function login(
         expira_em: expiraEm.toISOString(),
       });
 
-      // Salvar token e tipo no cookie
+      // Salvar cookies
       Cookies.set("session_token", token, {
         expires: 30,
         secure: true,
@@ -82,17 +91,17 @@ export async function login(
         secure: true,
         sameSite: "strict",
       });
+    } else {
+      // Sem "lembrar-me", salvar cookies apenas para a sessão do navegador
+      Cookies.set("session_token", "session", {
+        secure: true,
+        sameSite: "strict",
+      });
+      Cookies.set("user_type", usuarioData.tipo_usuario, {
+        secure: true,
+        sameSite: "strict",
+      });
     }
-
-    // Salvar usuário no localStorage (sessão atual)
-    const user: User = {
-      id: usuarioData.id,
-      username: usuarioData.username,
-      nome_completo: usuarioData.nome_completo,
-      tipo_usuario: usuarioData.tipo_usuario,
-    };
-
-    localStorage.setItem("user", JSON.stringify(user));
 
     return user;
   } catch (error) {
@@ -107,6 +116,13 @@ export async function verificarSessao(): Promise<User | null> {
 
   if (!token) return null;
 
+  // Se for sessão temporária, buscar do localStorage
+  if (token === "session") {
+    const userStr = localStorage.getItem("user");
+    return userStr ? (JSON.parse(userStr) as User) : null;
+  }
+
+  // Se for token persistente, verificar no banco
   try {
     const { data: sessao, error } = await supabase
       .from("sessoes")
@@ -149,12 +165,12 @@ export async function verificarSessao(): Promise<User | null> {
 export async function logout(): Promise<void> {
   const token = Cookies.get("session_token");
 
-  if (token) {
+  if (token && token !== "session") {
     await supabase.from("sessoes").delete().eq("token", token);
-    Cookies.remove("session_token");
-    Cookies.remove("user_type");
   }
 
+  Cookies.remove("session_token");
+  Cookies.remove("user_type");
   localStorage.removeItem("user");
 }
 

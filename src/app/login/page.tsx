@@ -1,53 +1,57 @@
+// src/app/login/page.tsx - ATUALIZAR handleSubmit
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/src/lib/auth'
 import { useAuth } from '@/src/context/AuthContext'
+import { useNotification } from '@/src/context/NotificationContext'
 import Image from 'next/image'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [lembrarMe, setLembrarMe] = useState(false)
-  const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
 
   const router = useRouter()
   const { setUser } = useAuth()
+  const { success, error } = useNotification()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErro('')
     setLoading(true)
 
     try {
       const user = await login(username, password, lembrarMe)
       setUser(user)
 
+      success(`Bem-vindo, ${user.nome_completo.split(' ')[0]}!`)
+
       // Redirecionar baseado no tipo de usuário
-      switch (user.tipo_usuario) {
-        case 'cliente':
-          router.push('/cliente')
-          break
-        case 'comerciante':
-          router.push('/comerciante')
-          break
-        case 'entregador':
-          router.push('/entregador')
-          break
-      }
-    } catch (error: any) {
-      setErro(error.message || 'Erro ao fazer login')
+      setTimeout(() => {
+        switch (user.tipo_usuario) {
+          case 'cliente':
+            router.push('/cliente')
+            break
+          case 'comerciante':
+            router.push('/comerciante')
+            break
+          case 'entregador':
+            router.push('/entregador')
+            break
+        }
+      }, 500)
+    } catch (err: any) {
+      error(err.message || 'Erro ao fazer login')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-giro-verde-claro/10 to-neutral-0 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-b from-giro-verde-claro/10 to-neutral-0 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -65,12 +69,6 @@ export default function LoginPage() {
 
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="bg-neutral-0 rounded-3xl shadow-xl border border-neutral-200 p-8">
-          {erro && (
-            <div className="bg-error/10 border-2 border-error/30 text-error px-4 py-3 rounded-xl mb-6 font-medium">
-              ⚠️ {erro}
-            </div>
-          )}
-
           <div className="space-y-6">
             {/* Username */}
             <div>
