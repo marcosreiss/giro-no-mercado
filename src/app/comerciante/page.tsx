@@ -31,7 +31,7 @@ interface ItemPedido {
 export default function ComerciantePage() {
     const router = useRouter()
     const { user } = useAuth()
-    const { showSuccess, showError } = useNotification()
+    const { success, error: showError } = useNotification()
     const [stats, setStats] = useState({
         pedidosHoje: 0,
         vendasHoje: 0,
@@ -48,6 +48,7 @@ export default function ComerciantePage() {
         if (user) {
             carregarDados()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user])
 
     const carregarDados = async () => {
@@ -95,6 +96,7 @@ export default function ComerciantePage() {
 
             // Agrupar por pedido e filtrar apenas pagos
             const pedidosMap = new Map<string, Pedido>()
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             itens?.forEach((item: any) => {
                 const pedido = item.pedidos
                 console.log('🔍 Verificando pedido:', {
@@ -197,12 +199,13 @@ export default function ComerciantePage() {
             }
 
             console.log('✅ Pedido atualizado com sucesso:', data)
-            showSuccess('Pedido aceito! Aguardando entregador')
+            success('Pedido aceito! Aguardando entregador')
             setPedidoSelecionado(null)
             
             console.log('🔄 Recarregando lista de pedidos...')
             await carregarDados()
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { message?: string; details?: string; hint?: string; code?: string }
             console.error('❌ Erro ao aceitar pedido:', {
                 message: error.message,
                 details: error.details,
@@ -278,7 +281,7 @@ export default function ComerciantePage() {
                         {pedidosPendentes.slice(0, 3).map((pedido) => (
                             <button
                                 key={pedido.id}
-                                onClick={() => router.push('/comerciante/pedidos')}
+                                onClick={() => verDetalhesPedido(pedido)}
                                 className="w-full bg-neutral-0 rounded-2xl p-5 text-left border-2 border-giro-amarelo/30 active:bg-neutral-50 transition-all btn-touch"
                             >
                                 <div className="flex items-center justify-between">
