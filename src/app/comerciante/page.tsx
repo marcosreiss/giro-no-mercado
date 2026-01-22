@@ -174,23 +174,42 @@ export default function ComerciantePage() {
     }
 
     const aceitarPedido = async () => {
-        if (!pedidoSelecionado) return
+        if (!pedidoSelecionado) {
+            console.warn('⚠️ Nenhum pedido selecionado')
+            return
+        }
         
+        console.log('🚀 Iniciando aceitação do pedido:', pedidoSelecionado.id)
         setAceitando(true)
+        
         try {
-            const { error } = await supabase
+            console.log('📤 Atualizando status do pedido para "aprovado"...')
+            
+            const { data, error } = await supabase
                 .from('pedidos')
                 .update({ status: 'aprovado' })
                 .eq('id', pedidoSelecionado.id)
+                .select()
 
-            if (error) throw error
+            if (error) {
+                console.error('❌ Erro do Supabase:', error)
+                throw error
+            }
 
+            console.log('✅ Pedido atualizado com sucesso:', data)
             showSuccess('Pedido aceito! Aguardando entregador')
             setPedidoSelecionado(null)
-            carregarDados() // Recarregar lista
-        } catch (error) {
-            console.error('Erro ao aceitar pedido:', error)
-            showError('Erro ao aceitar pedido')
+            
+            console.log('🔄 Recarregando lista de pedidos...')
+            await carregarDados()
+        } catch (error: any) {
+            console.error('❌ Erro ao aceitar pedido:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            })
+            showError('Erro ao aceitar pedido: ' + (error.message || 'Erro desconhecido'))
         } finally {
             setAceitando(false)
         }
@@ -403,7 +422,10 @@ export default function ComerciantePage() {
                         {/* Footer com ações */}
                         <div className="p-5 bg-neutral-50 border-t-2 border-neutral-200 space-y-3">
                             <button
-                                onClick={aceitarPedido}
+                                onClick={() => {
+                                    console.log('🔘 Botão "Aceitar Pedido" clicado')
+                                    aceitarPedido()
+                                }}
                                 disabled={aceitando}
                                 className="w-full bg-success text-neutral-0 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50 disabled:active:scale-100"
                             >

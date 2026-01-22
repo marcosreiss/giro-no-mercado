@@ -82,12 +82,14 @@ export default function ComerciantePedidosPage() {
                         taxa_entrega,
                         valor_total,
                         criado_em,
-                        pago_em
+                        pago_em,
+                        usuarios!pedidos_cliente_id_fkey (
+                            nome_completo
+                        )
                     )
                 `)
                 .eq('comerciante_id', comercianteId)
                 .eq('status', 'pendente')
-                .order('criado_em', { ascending: false })
 
             console.log('📦 Itens de pedido encontrados:', itens?.length || 0)
             if (erroItens) {

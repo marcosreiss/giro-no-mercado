@@ -61,8 +61,17 @@ CREATE TABLE IF NOT EXISTS produtos (
   preco DECIMAL(10,2) NOT NULL,
   foto_url TEXT,
   cota_disponivel INTEGER,
-  ativo BOOLEAN DEFAULT true
+  ativo BOOLEAN DEFAULT true,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Adicionar criado_em se não existir (para tabelas existentes)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'produtos' AND column_name = 'criado_em') THEN
+    ALTER TABLE produtos ADD COLUMN criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_produtos_comerciante ON produtos(comerciante_id);
 CREATE INDEX IF NOT EXISTS idx_produtos_ativo ON produtos(ativo);

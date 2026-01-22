@@ -41,65 +41,121 @@ export default function EntregadorPage() {
 
     const carregarDados = async () => {
         try {
+            console.log('🔄 [ENTREGADOR DASHBOARD] Carregando dados...')
+            
             // Buscar dados do entregador
-            const { data: entregador } = await supabase
+            console.log('🔍 [ENTREGADOR DASHBOARD] Buscando dados do entregador, user_id:', user?.id)
+            const { data: entregador, error: entregadorError } = await supabase
                 .from('entregadores')
                 .select('*')
                 .eq('usuario_id', user?.id)
                 .single()
 
-            if (entregador) {
-                setDisponivel(entregador.disponivel)
-                
-                // Buscar pedidos disponíveis (aprovados, pagos, sem entregador)
-                const { data: pedidosData } = await supabase
-                    .from('pedidos')
-                    .select('*')
-                    .eq('status', 'aprovado')
-                    .is('entregador_id', null)
-                    .not('pago_em', 'is', null)
-                    .order('criado_em', { ascending: false })
+            if (entregadorError) {
+                console.error('❌ [ENTREGADOR DASHBOARD] Erro ao buscar entregador:', {
+                    message: entregadorError?.message,
+                    details: entregadorError?.details,
+                    hint: entregadorError?.hint,
+                    code: entregadorError?.code,
+                    error: entregadorError
+                })
+                throw entregadorError
+            }
 
-                // Buscar nomes dos clientes
-                const pedidosComClientes = await Promise.all(
-                    (pedidosData || []).map(async (pedido) => {
-                        const { data: cliente } = await supabase
-                            .from('usuarios')
-                            .select('nome_completo')
-                            .eq('id', pedido.cliente_id)
-                            .single()
+            if (!entregador) {
+                console.warn('⚠️ [ENTREGADOR DASHBOARD] Nenhum entregador encontrado para user_id:', user?.id)
+                error('Perfil de entregador não encontrado')
+                return
+            }
 
-                        return {
-                            ...pedido,
-                            usuarios: cliente || { nome_completo: 'Cliente' }
-                        }
-                    })
-                )
+            console.log('✅ [ENTREGADOR DASHBOARD] Entregador encontrado:', entregador)
+            setDisponivel(entregador.disponivel)
+            
+            // Buscar pedidos disponíveis (aprovados, pagos, sem entregador)
+            console.log('🔍 [ENTREGADOR DASHBOARD] Buscando pedidos disponíveis...')
+            const { data: pedidosData, error: pedidosError } = await supabase
+                .from('pedidos')
+                .select('*')
+                .eq('status', 'aprovado')
+                .is('entregador_id', null)
+                .not('pago_em', 'is', null)
+                .order('criado_em', { ascending: false })
 
-                setPedidosDisponiveis(pedidosComClientes)
+            if (pedidosError) {
+                console.error('❌ [ENTREGADOR DASHBOARD] Erro ao buscar pedidos:', {
+                    message: pedidosError?.message,
+                    details: pedidosError?.details,
+                    hint: pedidosError?.hint,
+                    code: pedidosError?.code,
+                    error: pedidosError
+                })
+                throw pedidosError
+            }
 
-                // Calcular estatísticas de hoje
-                const hoje = new Date()
-                hoje.setHours(0, 0, 0, 0)
-                
-                const { data: entregasHoje } = await supabase
-                    .from('pedidos')
-                    .select('taxa_entrega')
-                    .eq('entregador_id', user?.id)
-                    .eq('status', 'entregue')
-                    .gte('criado_em', hoje.toISOString())
+            console.log('✅ [ENTREGADOR DASHBOARD] Pedidos encontrados:', pedidosData?.length || 0)
 
-                const ganhosHoje = entregasHoje?.reduce((sum, p) => sum + (p.taxa_entrega || 0), 0) || 0
+            // Buscar nomes dos clientes
+            const pedidosComClientes = await Promise.all(
+                (pedidosData || []).map(async (pedido) => {
+                    const { data: cliente } = await supabase
+                        .from('usuarios')
+                        .select('nome_completo')
+                        .eq('id', pedido.cliente_id)
+                        .single()
 
-                setStats({
-                    entregasHoje: entregasHoje?.length || 0,
-                    ganhosHoje,
-                    avaliacaoMedia: entregador.avaliacoes_media || 5.0,
-                    saldoCarteira: entregador.saldo_carteira || 0
+                    return {
+                        ...pedido,
+                        usuarios: cliente || { nome_completo: 'Cliente' }
+                    }
+                })
+            )
+
+            setPedidosDisponiveis(pedidosComClientes)
+
+            // Calcular estatísticas de hoje
+            console.log('🔍 [ENTREGADOR DASHBOARD] Calculando estatísticas...')
+            const hoje = new Date()
+            hoje.setHours(0, 0, 0, 0)
+            
+            const { data: entregasHoje, error: entregasError } = await supabase
+                .from('pedidos')
+                .select('taxa_entrega')
+                .eq('entregador_id', user?.id)
+                .eq('status', 'entregue')
+                .gte('criado_em', hoje.toISOString())
+
+            if (entregasError) {
+                console.error('❌ [ENTREGADOR DASHBOARD] Erro ao buscar entregas:', {
+                    message: entregasError?.message,
+                    details: entregasError?.details,
+                    hint: entregasError?.hint,
+                    code: entregasError?.code,
+                    error: entregasError
                 })
             }
-        } catch (err) {
-            console.error('Erro ao carregar dados:', err)
+
+            const ganhosHoje = entregasHoje?.reduce((sum, p) => sum + (p.taxa_entrega || 0), 0) || 0
+
+            const statsFinais = {
+                entregasHoje: entregasHoje?.length || 0,
+                ganhosHoje,
+                avaliacaoMedia: entregador.avaliacoes_media || 5.0,
+                saldoCarteira: entregador.saldo_carteira || 0
+            }
+
+            console.log('📊 [ENTREGADOR DASHBOARD] Estatísticas finais:', statsFinais)
+            setStats(statsFinais)
+            
+            console.log('✅ [ENTREGADOR DASHBOARD] Dados carregados com sucesso!')
+        } catch (err: any) {
+            console.error('❌ [ENTREGADOR DASHBOARD] ERRO FATAL ao carregar dados:', {
+                message: err?.message,
+                details: err?.details,
+                hint: err?.hint,
+                code: err?.code,
+                error: err
+            })
+            error(`Erro ao carregar dados: ${err?.message || 'Erro desconhecido'}`)
         } finally {
             setLoading(false)
         }

@@ -47,7 +47,7 @@ export default function ProdutosPage() {
                 .from('produtos')
                 .select('*')
                 .eq('comerciante_id', comerciante.id)
-                .order('criado_em', { ascending: false })    
+                .order('nome', { ascending: true })    
 
             if (erroQuery) throw erroQuery
 

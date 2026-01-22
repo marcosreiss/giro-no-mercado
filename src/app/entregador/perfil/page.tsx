@@ -36,45 +36,102 @@ export default function EntregadorPerfilPage() {
 
     const carregarDados = async () => {
         try {
+            console.log('🔄 [ENTREGADOR PERFIL] Carregando dados...')
+            
             // Buscar dados do entregador
+            console.log('🔍 [ENTREGADOR PERFIL] Buscando dados do entregador, user_id:', user?.id)
             const { data: entregadorData, error: erroEntregador } = await supabase
                 .from('entregadores')
                 .select('*')
                 .eq('usuario_id', user?.id)
                 .single()
 
-            if (erroEntregador) throw erroEntregador
+            if (erroEntregador) {
+                console.error('❌ [ENTREGADOR PERFIL] Erro ao buscar entregador:', {
+                    message: erroEntregador?.message,
+                    details: erroEntregador?.details,
+                    hint: erroEntregador?.hint,
+                    code: erroEntregador?.code,
+                    error: erroEntregador
+                })
+                throw erroEntregador
+            }
+            
+            if (!entregadorData) {
+                console.warn('⚠️ [ENTREGADOR PERFIL] Nenhum entregador encontrado para user_id:', user?.id)
+                showError('Perfil de entregador não encontrado')
+                return
+            }
+            
+            console.log('✅ [ENTREGADOR PERFIL] Entregador encontrado:', entregadorData)
             setEntregador(entregadorData)
 
             // Entregas de hoje
+            console.log('🔍 [ENTREGADOR PERFIL] Buscando entregas de hoje...')
             const hoje = new Date()
             hoje.setHours(0, 0, 0, 0)
             
-            const { count: entregasHoje } = await supabase
+            const { count: entregasHoje, error: erroEntregasHoje } = await supabase
                 .from('pedidos')
                 .select('*', { count: 'exact', head: true })
                 .eq('entregador_id', user?.id)
                 .eq('status', 'entregue')
                 .gte('criado_em', hoje.toISOString())
 
+            if (erroEntregasHoje) {
+                console.error('❌ [ENTREGADOR PERFIL] Erro ao buscar entregas de hoje:', {
+                    message: erroEntregasHoje?.message,
+                    details: erroEntregasHoje?.details,
+                    hint: erroEntregasHoje?.hint,
+                    code: erroEntregasHoje?.code,
+                    error: erroEntregasHoje
+                })
+            }
+
+            console.log('✅ [ENTREGADOR PERFIL] Entregas de hoje:', entregasHoje || 0)
+
             // Ganhos de hoje (taxa de entrega * entregas de hoje)
             const ganhosHoje = (entregasHoje || 0) * 5.00
 
             // Entregas em andamento
-            const { count: entregasEmAndamento } = await supabase
+            console.log('🔍 [ENTREGADOR PERFIL] Buscando entregas em andamento...')
+            const { count: entregasEmAndamento, error: erroAndamento } = await supabase
                 .from('pedidos')
                 .select('*', { count: 'exact', head: true })
                 .eq('entregador_id', user?.id)
                 .in('status', ['em_entrega', 'aguardando_confirmacao'])
 
-            setEstatisticas({
+            if (erroAndamento) {
+                console.error('❌ [ENTREGADOR PERFIL] Erro ao buscar entregas em andamento:', {
+                    message: erroAndamento?.message,
+                    details: erroAndamento?.details,
+                    hint: erroAndamento?.hint,
+                    code: erroAndamento?.code,
+                    error: erroAndamento
+                })
+            }
+
+            console.log('✅ [ENTREGADOR PERFIL] Entregas em andamento:', entregasEmAndamento || 0)
+
+            const estatisticasFinais = {
                 entregasHoje: entregasHoje || 0,
                 ganhosHoje,
                 entregasEmAndamento: entregasEmAndamento || 0
+            }
+
+            console.log('📊 [ENTREGADOR PERFIL] Estatísticas finais:', estatisticasFinais)
+            setEstatisticas(estatisticasFinais)
+            
+            console.log('✅ [ENTREGADOR PERFIL] Dados carregados com sucesso!')
+        } catch (error: any) {
+            console.error('❌ [ENTREGADOR PERFIL] ERRO FATAL ao carregar dados:', {
+                message: error?.message,
+                details: error?.details,
+                hint: error?.hint,
+                code: error?.code,
+                error: error
             })
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error)
-            showError('Erro ao carregar dados')
+            showError(`Erro ao carregar dados: ${error?.message || 'Erro desconhecido'}`)
         } finally {
             setLoading(false)
         }

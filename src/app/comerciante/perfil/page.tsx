@@ -36,6 +36,8 @@ export default function ComerciantePerfilPage() {
 
     const carregarDados = async () => {
         try {
+            console.log('🔄 Carregando dados do perfil do comerciante...')
+            
             // Buscar dados do comerciante
             const { data: comercianteData, error: erroComerciante } = await supabase
                 .from('comerciantes')
@@ -43,36 +45,62 @@ export default function ComerciantePerfilPage() {
                 .eq('usuario_id', user?.id)
                 .single()
 
-            if (erroComerciante) throw erroComerciante
+            if (erroComerciante) {
+                console.error('❌ Erro ao buscar comerciante:', erroComerciante)
+                throw erroComerciante
+            }
+            
+            if (!comercianteData) {
+                console.warn('⚠️ Nenhum comerciante encontrado para este usuário')
+                showError('Perfil de comerciante não encontrado')
+                return
+            }
+            
+            console.log('✅ Comerciante encontrado:', comercianteData)
             setComerciante(comercianteData)
 
             // Total de produtos
-            const { count: totalProdutos } = await supabase
+            const { count: totalProdutos, error: erroProdutos } = await supabase
                 .from('produtos')
                 .select('*', { count: 'exact', head: true })
                 .eq('comerciante_id', comercianteData.id)
 
+            if (erroProdutos) console.error('Erro ao contar produtos:', erroProdutos)
+
             // Produtos ativos
-            const { count: produtosAtivos } = await supabase
+            const { count: produtosAtivos, error: erroProdutosAtivos } = await supabase
                 .from('produtos')
                 .select('*', { count: 'exact', head: true })
                 .eq('comerciante_id', comercianteData.id)
                 .eq('ativo', true)
 
+            if (erroProdutosAtivos) console.error('Erro ao contar produtos ativos:', erroProdutosAtivos)
+
             // Pedidos recebidos
-            const { count: pedidosRecebidos } = await supabase
+            const { count: pedidosRecebidos, error: erroPedidos } = await supabase
                 .from('itens_pedido')
                 .select('*', { count: 'exact', head: true })
                 .eq('comerciante_id', comercianteData.id)
 
+            if (erroPedidos) console.error('Erro ao contar pedidos:', erroPedidos)
+
             // Total de vendas
-            const { data: itens } = await supabase
+            const { data: itens, error: erroVendas } = await supabase
                 .from('itens_pedido')
                 .select('preco_total, pedidos!inner(status)')
                 .eq('comerciante_id', comercianteData.id)
                 .eq('status', 'aprovado')
 
+            if (erroVendas) console.error('Erro ao buscar vendas:', erroVendas)
+
             const totalVendas = itens?.reduce((sum, item) => sum + item.preco_total, 0) || 0
+
+            console.log('📊 Estatísticas calculadas:', {
+                totalProdutos,
+                produtosAtivos,
+                pedidosRecebidos,
+                totalVendas
+            })
 
             setEstatisticas({
                 totalProdutos: totalProdutos || 0,
@@ -80,9 +108,15 @@ export default function ComerciantePerfilPage() {
                 pedidosRecebidos: pedidosRecebidos || 0,
                 totalVendas
             })
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error)
-            showError('Erro ao carregar dados')
+        } catch (error: any) {
+            console.error('❌ Erro ao carregar dados:', {
+                message: error?.message,
+                details: error?.details,
+                hint: error?.hint,
+                code: error?.code,
+                error
+            })
+            showError('Erro ao carregar dados: ' + (error?.message || 'Erro desconhecido'))
         } finally {
             setLoading(false)
         }
